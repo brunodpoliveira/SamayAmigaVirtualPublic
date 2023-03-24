@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_constraintLeft_toRightOf="parent"
+    tools:context=".MainActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chatView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/backgroundColor"
+        android:orientation="vertical"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@id/editMessage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:stackFromEnd="true"
+        tools:itemCount="2"
+        tools:listitem="@layout/adapter_message_one">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <ImageButton
+        android:id="@+id/btnSend"
+        android:layout_width="57dp"
+        android:layout_height="51dp"
+        android:background="@color/backgroundColor"
+        android:backgroundTint="@color/backgroundColor"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/editMessage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/editMessage"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@android:drawable/ic_media_play"
+        app:tint="@color/appTintColor" />
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/config"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/backgroundTintButtonColor"
+        android:padding="10dp"
+        android:tint="@color/TextMsgColor"
+        android:tintMode="add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.918"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.109"
+        app:srcCompat="@drawable/ic_settings" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/speak"
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:alpha="100"
+        android:backgroundTint="@color/backgroundTintButtonColor"
+        android:backgroundTintMode="add"
+        android:padding="10dp"
+        app:backgroundTint="@color/backgroundTintButtonColor"
+        app:backgroundTintMode="add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/editMessage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:rippleColor="@color/backgroundTintButtonColor" />
+
+    <EditText
+        android:id="@+id/editMessage"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:background="@color/backgroundTintButtonColor"
+        android:backgroundTintMode="add"
+        android:ems="13"
+        android:hint="@string/digite_mensagem_aqui"
+        android:inputType="text"
+        android:padding="5dp"
+        android:textColor="@color/TextMsgColor"
+        android:textColorHint="@color/TextMsgColor"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnSend"
+        app:layout_constraintStart_toEndOf="@+id/speak"
+        app:layout_constraintTop_toTopOf="@+id/speak"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/btnToggleDark"
+        android:layout_width="163dp"
+        android:layout_height="49dp"
+        android:backgroundTint="@color/teal_700"
+        android:text="@string/modo_escuro"
+        android:textColor="#000000"
+        app:layout_constraintBottom_toTopOf="@+id/editMessage"
+        app:layout_constraintEnd_toStartOf="@+id/editMessage"
+        app:layout_constraintHorizontal_bias="0.245"
+        app:layout_constraintStart_toEndOf="@+id/speak"
+        app:layout_constraintTop_toTopOf="@+id/chatView"
+        app:layout_constraintVertical_bias="0.117" />
+
+    <TextView
+        android:id="@+id/creditsHead"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/credits"
+        android:textColor="#FFFF00"
+        android:shadowColor="#FFFF00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="5"
+        android:strokeColor="#000000"
+        android:strokeWidth="5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/creditsCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/creditsCount"
+        android:textColor="#FFFF00"
+        android:shadowColor="#FFFF00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="5"
+        android:strokeColor="#000000"
+        android:strokeWidth="5"
+        app:layout_constraintStart_toEndOf="@+id/creditsHead"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/subscriptionHead"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="208dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/subscription"
+        android:textColor="#FFFF00"
+        android:shadowColor="#FFFF00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="5"
+        android:strokeColor="#000000"
+        android:strokeWidth="5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/subscriptionStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="196dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/subscriptionStatusText"
+        android:textColor="#FFFF00"
+        android:shadowColor="#FFFF00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="5"
+        android:strokeColor="#000000"
+        android:strokeWidth="5"
+        app:layout_constraintStart_toEndOf="@+id/creditsCount"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnDailyReward"
+        android:layout_width="163dp"
+        android:layout_height="49dp"
+        android:layout_marginTop="-450dp"
+        android:layout_marginEnd="-180dp"
+        android:backgroundTint="@color/teal_700"
+        android:text="@string/dailyReward"
+        android:textColor="#000000"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@+id/chatView"
+        app:layout_constraintTop_toBottomOf="@+id/chatView" />
+
+    <Button
+        android:id="@+id/btnShop"
+        android:layout_width="163dp"
+        android:layout_height="49dp"
+        android:layout_marginTop="-450dp"
+        android:layout_marginEnd="-380dp"
+        android:backgroundTint="@color/teal_700"
+        android:text="@string/btnShop"
+        android:textColor="#000000"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@+id/chatView"
+        app:layout_constraintTop_toBottomOf="@+id/chatView" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

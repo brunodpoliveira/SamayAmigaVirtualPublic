@@ -1,0 +1,77 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.firebase-perf'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 33
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/INDEX.LIST', 'META-INF/DEPENDENCIES']
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.internaltest.sarahchatbotmvp"
+        minSdk 26
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    namespace 'com.internaltest.sarahchatbotmvp'
+    buildToolsVersion '31.0.0'
+    ndkVersion '23.0.7599858'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.0"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'org.jetbrains:annotations:23.0.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    implementation 'androidx.recyclerview:recyclerview:1.3.0'
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    implementation 'com.google.code.gson:gson:2.9.0'
+    implementation "com.squareup.okhttp3:okhttp:4.9.3"
+    implementation 'com.google.android.play:core:1.10.3'
+    implementation 'com.theokanning.openai-gpt3-java:api:0.11.1'
+    implementation 'com.theokanning.openai-gpt3-java:service:0.11.1'
+    implementation 'com.google.android.play:integrity:1.1.0'
+
+    //firebase
+    implementation platform('com.google.firebase:firebase-bom:30.3.0')
+    implementation 'com.google.firebase:firebase-analytics:21.2.0'
+    implementation 'com.google.firebase:firebase-perf:20.3.1'
+    implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.4'
+
+    implementation 'com.google.android.gms:play-services-auth:20.4.1'
+    implementation 'com.github.bumptech.glide:glide:4.8.0'
+    implementation 'io.qonversion.android.sdk:sdk:4.+'
+    implementation 'androidx.activity:activity-compose:1.6.1'
+    implementation "androidx.core:core-ktx:1.9.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.datastore:datastore-preferences:1.0.0'
+}
+repositories {
+    mavenCentral()
+}

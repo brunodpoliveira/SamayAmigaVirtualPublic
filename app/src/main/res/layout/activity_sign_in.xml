@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/sign_in_text"
+        android:textSize="18sp" />
+
+
+    <com.google.android.gms.common.SignInButton
+        android:id="@id/sign_in_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp">
+
+    </com.google.android.gms.common.SignInButton>
+
+    <Button
+        android:id="@+id/privacy"
+        android:layout_width="370dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="126dp"
+        android:text="@string/privacy"
+        android:textColor="#757575" />
+
+    <Button
+        android:id="@+id/terms_of_use"
+        android:layout_width="372dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="75dp"
+        android:text="@string/terms_of_use"
+        android:textColor="#757575" />
+
+</RelativeLayout>

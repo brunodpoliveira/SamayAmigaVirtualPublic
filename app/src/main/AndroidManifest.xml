@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-feature android:glEsVersion="0x00020000"
+        android:required="true"/>
+
+    <application
+        android:name=".QonversionApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Samay - Amiga Virtual"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <meta-data
+            android:name="com.google.android.gms.wallet.api.enabled"
+            android:value="true" />
+        <meta-data
+            android:name="firebase_performance_logcat_enabled"
+            android:value="true" />
+
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+
+        <activity android:name=".MainActivity" />
+        <activity
+            android:name=".Splash"
+            android:theme="@style/AppTheme"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".login.SignIn" />
+        <activity
+            android:name=".login.ProfileActivity">
+        </activity>
+        <activity android:name=".wallet.Wallet" />
+    </application>
+</manifest>

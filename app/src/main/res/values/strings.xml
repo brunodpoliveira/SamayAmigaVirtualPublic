@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Samay - Amiga Virtual</string>
+    <string name="digite_mensagem_aqui">Digite mensagem aqui</string>
+    <string name="modo_escuro">Modo Escuro</string>
+    <string name="sign_in_text">🥳 Olá! Boas Vindas ao app Samay!\n
+        📖 Por favor leia os nossos termos e avisos abaixo antes de usar o app!\n
+        ⚠ AVISOS: ESSE APP AINDA ESTÁ EM FASE DE TESTES.\n
+        🤖 As respostas são geradas por um algoritmo, não uma pessoa.\n
+        ⛔ Favor relatar quaisquer problemas para:teqbot.io59@gmail.com \n
+        🩺 Esse app não é substituto de um profissional de saúde mental, e foi feito somente para propósitos de entretenimento \n
+        🤬 Em raras ocasiões, as frases ditas pelo app podem ter cunho ofensivo,violento,
+        racista, homofóbico, etc. Estamos trabalhando duro para criar um ambiente
+        agrádavel e inclusivo para todos os nosso usuários. \n
+        ⬇ Acesse o app fazendo login com os botão abaixo.\n
+    </string>
+    <string name="name">Nome</string>
+    <string name="email">Email</string>
+    <string name="id">id</string>
+    <string name="logout">Logout</string>
+    <string name="goToChat">Ir para o chat</string>
+    <string name="goToWallet">Pagamentos/Carteira</string>
+    <string name="privacy">Política de Privacidade</string>
+    <string name="terms_of_use">Termos de Uso</string>
+    <string name="textview">TextView</string>
+    <string name="button">Button</string>
+    <string name="textview2">TextView</string>
+    <string name="checkAndCancelOffering">Checar/Cancelar Assinatura</string>
+    <string name="credits">Créditos:</string>
+    <string name="subscription">Assinatura:</string>
+    <string name="creditsCount">0</string>
+    <string name="subscriptionStatusText">Sem inscrição</string>
+    <string name="dailyReward">Recompensa diária</string>
+    <string name="goToProfileActivity">Voltar</string>
+    <string name="btnShop">Compre mais créditos aqui</string>
+</resources>

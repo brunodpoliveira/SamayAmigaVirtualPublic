@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="sign_in_button" type="id" />
+    <item name="walletBtn" type="id" />
+    <item name="itemName" type="id" />
+    <item name="itemPrice" type="id" />
+    <item name="itemDescription" type="id" />
+    <item name="itemCancel" type="id" />
+    <item name="itemCancel2" type="id" />
+    <item name="creditsCount" type="id" />
+    <item name="subscriptionHead" type="id" />
+</resources>
