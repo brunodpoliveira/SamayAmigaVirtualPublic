@@ -9,4 +9,8 @@
     <item name="itemCancel2" type="id" />
     <item name="creditsCount" type="id" />
     <item name="subscriptionHead" type="id" />
+    <item name="itemNameGPT4Offering" type="id" />
+    <item name="itemPriceGPT4Offering" type="id" />
+    <item name="itemDescriptionGPT4Offering" type="id" />
+    <item name="firebaseId" type="id" />
 </resources>

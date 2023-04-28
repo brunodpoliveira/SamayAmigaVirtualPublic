@@ -1,4 +1,4 @@
-package com.internaltest.sarahchatbotmvp.adapters
+package com.internaltest.sarahchatbotmvp.ui.adapters
 
 import android.app.Activity
 import android.view.LayoutInflater
@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.internaltest.sarahchatbotmvp.R
-import com.internaltest.sarahchatbotmvp.adapters.ChatAdapter.MyViewHolder
+import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter.MyViewHolder
 import com.internaltest.sarahchatbotmvp.models.Message
 
 class ChatAdapter(private val messageList: List<Message>, private val activity: Activity) :

@@ -5,7 +5,7 @@ Samay Amiga Virtual: aplicativo para Android de chatbot de saúde mental
 * Uma [conta de desenvolvedor do Google Play](https://developer.android.com/distribute/console/) para publicar
   o aplicativo e gerenciar assinaturas
 
-* Um [projeto Firebase](https://firebase.google.com/) para implantar as funções analíticas
+* Um [projeto Firebase](https://firebase.google.com/) para implantar as funções analíticas, de autenticação e dados
 
    * Observação: o projeto Firebase tem um projeto Google Cloud Console correspondente que será
      configurado para notificações do desenvolvedor em tempo real
@@ -31,7 +31,7 @@ Samay Amiga Virtual: aplicativo para Android de chatbot de saúde mental
 
    * O aplicativo Android não será compilado sem `google-services.json` do Firebase
 
-3. Conclua a **configuração do aplicativo Google Oauth**
+3. Conclua a **configuração do Firebase Auth e Firestore**
 
    * O login só funcionará com esta etapa concluída
 
@@ -72,11 +72,11 @@ Samay Amiga Virtual: aplicativo para Android de chatbot de saúde mental
 10. Conclua **Segurança de dados do Google Play**
 
 11. Adicione um link para seus termos de uso e privacidade
-      * Substitua "PRIVACY_LINK_HERE" e "TERMS_OF_USE_LINK_HERE" com links para o seus termos
+   * Substitua "PRIVACY_LINK_HERE" e "TERMS_OF_USE_LINK_HERE" com links para o seus termos
 
 # Configuração do projeto Firebase
 
-Este aplicativo usa Firebase (Performance, Crashlytics, Analytics).
+Este aplicativo usa Firebase (Performance, Crashlytics, Analytics, Auth, Firestore).
 
 1. Acesse **Firebase Console** e crie um projeto Firebase
 
@@ -100,7 +100,21 @@ Este aplicativo usa Firebase (Performance, Crashlytics, Analytics).
    * Siga as instruções para adicionar o Firebase Analytics SDK ao seu projeto Android.
    * Assim que o SDK for adicionado, você poderá começar a usar o Firebase Analytics para rastrear o comportamento do usuário em seu aplicativo. Você pode rastrear eventos, propriedades do usuário e envolvimento do usuário.
 
-5. Verifique a configuração
+5. Configure o Firebase Auth
+
+   * No Firebase Console, vá para a guia "Authentication" e clique em "Configurar método de login".
+   * Selecione os métodos de login que deseja permitir em seu aplicativo (por exemplo, email/senha, Google, Facebook).
+   * Siga as instruções para configurar cada método de login escolhido.
+   * Ele irá criar um cliente Oauth. Vá para o console GCP --> Credenciais.
+   * Copie e cole o ID do cliente e substitua o valor OAUTH_CLIENT_HERE com o seu oauth client
+
+6. Configure o Firestore
+
+   * No Firebase Console, vá para a guia "Firestore" e clique em "Criar banco de dados".
+   * Escolha a opção "Iniciar no modo de teste" e selecione a região mais próxima de você.
+   * Defina as regras de segurança para o seu banco de dados e clique em "Concluir".
+
+7. Verifique a configuração
 
    * Crie e execute seu aplicativo Android em um emulador ou dispositivo físico.
    * Execute algumas ações no aplicativo para gerar alguns dados.
@@ -119,43 +133,30 @@ Configuração do Firebase.
 
    * `{project_folder}/build.gradle`
 
-1. Altere o `androidApplicationId` para o nome correto do pacote Android
+2. Altere o `androidApplicationId` para o nome correto do pacote Android
 
    * `{project_folder}/gradle.properties`
 
-1. Confirme se você tem o `google-services.json` mais recente da configuração do Firebase em seu
+3. Confirme se você tem o `google-services.json` mais recente da configuração do Firebase em seu
    diretório de aplicativos
 
    * `{project_folder}/app/google-services.json`
 
-1. Remova o arquivo de configuração google-services.json localizado na pasta de depuração do aplicativo.
+4. Remova o arquivo de configuração google-services.json localizado na pasta de depuração do aplicativo.
 
    * `{project_folder}/app/src/debug/`
 
-1. Recompile o projeto Gradle e verifique se não há erros
+5. Recompile o projeto Gradle e verifique se não há erros
 
-1. Assine uma compilação de liberação com sua chave de liberação
+6. Assine uma compilação de liberação com sua chave de liberação
 
    * [https://developer.android.com/studio/publish/app-signing#sign-apk](https://developer.android.com/studio/publish/app-signing#sign-apk)
 
-1. Se você pulou a etapa de configuração do Firebase para a impressão digital SHA1, pode concluí-la
+7. Se você pulou a etapa de configuração do Firebase para a impressão digital SHA1, pode concluí-la
    passo agora e reconstrua com o `google-services.json` atualizado
 
    * Se você estiver usando o Google Play Signing, poderá obter o SHA1 no Google Play Console em
      **Configuração > Integridade do aplicativo**
-
-# Configuração do aplicativo Google Oauth
-
-1. Abra seu projeto no Console de APIs ou crie um projeto se você ainda não tiver um.
-2. Na página da tela de permissão OAuth, verifique se todas as informações estão completas e precisas.
-3. Especifique os URLs da Política de Privacidade e os Termos de Serviço do seu app.
-4. Na página "Credenciais", crie um ID do cliente Android para o app, caso ainda não tenha um.
-   Será necessário especificar o nome do pacote do seu aplicativo e a assinatura SHA-1.
-5. Na página "Credenciais", crie um ID do cliente de aplicativo da Web, caso ainda não tenha um.
-   Você pode deixar os campos "Origens JavaScript autorizadas" e "URIs de redirecionamento autorizado" em branco. 
-Esse ID do cliente representa o servidor de back-end de autenticação. 
-Você usaria esse ID do cliente ao chamar as APIs do Google pelo seu servidor, 
-mas precisa dele mesmo que não o faça.
 
 # Configuração do aplicativo Qonversion
 
@@ -201,19 +202,19 @@ mas precisa dele mesmo que não o faça.
    6. Insira o identificador do plano básico e configure seu tipo de renovação com cobrança e períodos de carência. Você também pode adicionar tags que são usadas para distinguir os planos básicos do lado da API. Isso não é necessário com um plano básico por assinatura.
    7. O último passo é definir o preço. Navegue até a seção Preços e disponibilidade e clique em Definir preços, selecione as regiões em que a assinatura estará disponível e pressione Definir preço.
    8. Insira o preço e clique em Atualizar. Salvar alterações.
-   9. Depois de criar um plano básico, ele tem um status de rascunho. Clique no botão Ativar para disponibilizá-lo aos usuários.   
+   9. Depois de criar um plano básico, ele tem um status de rascunho. Clique no botão Ativar para disponibilizá-lo aos usuários.
    ## 3. Adicionar oferta
-    1. O Qonversion ainda não oferece suporte a várias ofertas. Apenas um plano base compatível com versões anteriores e uma oferta compatível com versões anteriores para esse plano básico são suportados no momento.
-    2. Clique em Incluir oferta para criar uma oferta.
-    3. Selecione o plano básico ao qual a nova oferta pertencerá e clique em Adicionar oferta.
-    4. Especifique o identificador da oferta e selecione os critérios de elegibilidade. Existem várias opções disponíveis: usuários que nunca compraram esta ou qualquer outra assinatura; aqueles que atualizaram de outras assinaturas; determinado pelo desenvolvedor.
-    (Os critérios determinados pelo desenvolvedor são incompatíveis com versões anteriores e, portanto, não podem ser usados com o Qonversion.)
-    5. Você também pode adicionar tags como no plano básico.
-    6. A etapa final são as fases. Você pode configurar até duas fases que serão utilizadas antes da compra do plano básico. Por exemplo, você pode adicionar uma avaliação gratuita por uma semana e um desconto de 10% na próxima semana antes que o usuário compre a assinatura original.
-       Para criar uma fase, clique no botão Adicionar fase na seção Fases.
-    7. Escolha o tipo de fase, a duração e, se escolher o tipo de desconto, os preços.
-    8. Pressione Aplicar e Salvar para criar uma oferta. A oferta tem um status de rascunho. Pressione Ativar.
-    9. Depois de ter feito todas as etapas acima, sua assinatura está pronta para uso. Certifique-se de ter tags compatíveis com versões anteriores para o plano básico e a oferta, se houver.
+   1. O Qonversion ainda não oferece suporte a várias ofertas. Apenas um plano base compatível com versões anteriores e uma oferta compatível com versões anteriores para esse plano básico são suportados no momento.
+   2. Clique em Incluir oferta para criar uma oferta.
+   3. Selecione o plano básico ao qual a nova oferta pertencerá e clique em Adicionar oferta.
+   4. Especifique o identificador da oferta e selecione os critérios de elegibilidade. Existem várias opções disponíveis: usuários que nunca compraram esta ou qualquer outra assinatura; aqueles que atualizaram de outras assinaturas; determinado pelo desenvolvedor.
+      (Os critérios determinados pelo desenvolvedor são incompatíveis com versões anteriores e, portanto, não podem ser usados com o Qonversion.)
+   5. Você também pode adicionar tags como no plano básico.
+   6. A etapa final são as fases. Você pode configurar até duas fases que serão utilizadas antes da compra do plano básico. Por exemplo, você pode adicionar uma avaliação gratuita por uma semana e um desconto de 10% na próxima semana antes que o usuário compre a assinatura original.
+      Para criar uma fase, clique no botão Adicionar fase na seção Fases.
+   7. Escolha o tipo de fase, a duração e, se escolher o tipo de desconto, os preços.
+   8. Pressione Aplicar e Salvar para criar uma oferta. A oferta tem um status de rascunho. Pressione Ativar.
+   9. Depois de ter feito todas as etapas acima, sua assinatura está pronta para uso. Certifique-se de ter tags compatíveis com versões anteriores para o plano básico e a oferta, se houver.
 
 # Configuração da API OpenAI
 
@@ -230,7 +231,7 @@ mas precisa dele mesmo que não o faça.
 
 1. Carregue e publique o APK de lançamento no teste interno, teste fechado, teste aberto ou faixa de produção
 
-   * [https://support.google.com/googleplay/android-developer/answer/113469](https://support.google.com/googleplay/android-developer/answer/113469)    
+   * [https://support.google.com/googleplay/android-developer/answer/113469](https://support.google.com/googleplay/android-developer/answer/113469)
 
 1. Vincule o projeto do Google Cloud Console à conta de desenvolvedor do Google Play
 

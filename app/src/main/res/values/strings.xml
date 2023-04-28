@@ -32,4 +32,5 @@
     <string name="dailyReward">Recompensa diária</string>
     <string name="goToProfileActivity">Voltar</string>
     <string name="btnShop">Compre mais créditos aqui</string>
+    <string name="deleteAccount">Deletar Conta e Info</string>
 </resources>

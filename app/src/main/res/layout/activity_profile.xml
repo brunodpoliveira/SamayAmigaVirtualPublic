@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".login.ProfileActivity">
+    tools:context=".ui.main.ProfileActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,6 +36,15 @@
             android:textSize="20sp"
             android:text="@string/id"
             android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:id="@+id/firebaseId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/id"
+            android:textSize="20sp" />
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -58,6 +67,16 @@
             android:text="@string/goToChat"
             android:textColor="#000000"
             android:layout_marginTop="30dp"/>
+
+        <Button
+            android:id="@+id/deleteAccountBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/deleteAccount"
+            android:textColor="#000000"
+            android:layout_marginTop="30dp"/>
+
+
 
     </LinearLayout>
 

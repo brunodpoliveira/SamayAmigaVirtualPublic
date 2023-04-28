@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    tools:context=".MainActivity">
+    tools:context=".ui.main.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
@@ -30,7 +30,6 @@
             app:layout_constraintStart_toEndOf="@+id/creditsHead"
             app:layout_constraintTop_toTopOf="parent" />
 
-
         <TextView
             android:id="@+id/subscriptionHead"
             android:layout_width="wrap_content"
@@ -41,7 +40,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-
         <TextView
             android:id="@+id/subscriptionStatus"
             android:layout_width="wrap_content"
@@ -51,7 +49,6 @@
             android:text="@string/subscriptionStatusText"
             app:layout_constraintStart_toEndOf="@+id/subscriptionHead"
             app:layout_constraintTop_toTopOf="parent" />
-
 
         <Button
             android:id="@+id/itemCancel"
@@ -76,85 +73,160 @@
             app:layout_constraintTop_toBottomOf="@+id/creditsHead" />
 
         <TextView
+            android:id="@+id/itemDescriptionGPT4Offering"
+            android:layout_width="199dp"
+            android:layout_height="102dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="100dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemPriceGPT4Offering"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/itemNameGPT4Offering" />
+
+        <TextView
+            android:id="@+id/itemNameGPT4Offering"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="42dp"
+            android:layout_marginEnd="160dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemDescriptionGPT4Offering"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/itemCancel" />
+
+        <Button
+            android:id="@+id/itemPriceGPT4Offering"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="160dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/button"
+            android:textColor="#757575"
+            app:layout_constraintBottom_toTopOf="@+id/itemNamePremiumOffering"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/itemDescriptionGPT4Offering" />
+
+        <TextView
             android:id="@+id/itemDescriptionPremiumOffering"
             android:layout_width="199dp"
             android:layout_height="102dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="15dp"
             android:layout_marginEnd="100dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemPricePremiumOffering"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/itemNamePremiumOffering" />
 
         <TextView
             android:id="@+id/itemNamePremiumOffering"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="50dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="160dp"
+            android:layout_marginBottom="15dp"
             android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemDescriptionPremiumOffering"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemCancel" />
-
+            app:layout_constraintTop_toBottomOf="@+id/itemPriceGPT4Offering" />
 
         <Button
             android:id="@+id/itemPricePremiumOffering"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="160dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/button"
             android:textColor="#757575"
+            app:layout_constraintBottom_toTopOf="@+id/itemNameLiteOffering"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/itemDescriptionPremiumOffering" />
 
         <TextView
             android:id="@+id/itemDescriptionLiteOffering"
             android:layout_width="199dp"
             android:layout_height="102dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="15dp"
             android:layout_marginEnd="100dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemPriceLiteOffering"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemNameLiteOffering" />
-
-        <TextView
-            android:id="@+id/itemNameLiteOffering"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="50dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/textview"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemPricePremiumOffering" />
+            app:layout_constraintTop_toBottomOf="@+id/itemNameLiteOffering" />
 
         <Button
             android:id="@+id/itemPriceLiteOffering"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="160dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/button"
             android:textColor="#757575"
+            app:layout_constraintBottom_toTopOf="@+id/itemName"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/itemDescriptionLiteOffering" />
+
+        <TextView
+            android:id="@+id/itemNameLiteOffering"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="160dp"
+            android:layout_marginBottom="15dp"
+            android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemDescriptionLiteOffering"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/itemPricePremiumOffering" />
 
         <TextView
             android:id="@+id/itemDescription"
             android:layout_width="199dp"
             android:layout_height="102dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="15dp"
             android:layout_marginEnd="100dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemPrice"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/itemName" />
 
         <TextView
             android:id="@+id/itemName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="50dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="160dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/textview"
+            app:layout_constraintBottom_toTopOf="@+id/itemDescription"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/itemPriceLiteOffering" />
 
@@ -162,13 +234,16 @@
             android:id="@+id/itemPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="160dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/button"
             android:textColor="#757575"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/itemDescription" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

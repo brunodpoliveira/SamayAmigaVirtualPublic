@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_constraintLeft_toRightOf="parent"
-    tools:context=".MainActivity">
+    tools:context=".ui.main.MainActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatView"
@@ -42,7 +43,6 @@
         app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@android:drawable/ic_media_play"
         app:tint="@color/appTintColor" />
-
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/config"
@@ -97,19 +97,43 @@
         app:layout_constraintTop_toTopOf="@+id/speak"
         app:layout_constraintVertical_bias="0.0" />
 
-    <Button
-        android:id="@+id/btnToggleDark"
-        android:layout_width="163dp"
-        android:layout_height="49dp"
-        android:backgroundTint="@color/teal_700"
-        android:text="@string/modo_escuro"
-        android:textColor="#000000"
+    <RelativeLayout
+        android:id="@+id/relativeLayout"
+        android:layout_width="110dp"
+        android:layout_height="40dp"
         app:layout_constraintBottom_toTopOf="@+id/editMessage"
         app:layout_constraintEnd_toStartOf="@+id/editMessage"
-        app:layout_constraintHorizontal_bias="0.245"
+        app:layout_constraintHorizontal_bias="0.228"
         app:layout_constraintStart_toEndOf="@+id/speak"
         app:layout_constraintTop_toTopOf="@+id/chatView"
-        app:layout_constraintVertical_bias="0.117" />
+        app:layout_constraintVertical_bias="0.115">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/btnToggleDark"
+            android:layout_width="75dp"
+            android:layout_height="35dp"
+            android:drawablePadding="20dp"
+            android:thumb="@drawable/switch_thumb"
+            android:track="@drawable/switch_track" />
+
+        <ImageView
+            android:id="@+id/sunIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/sun_icon" />
+
+        <ImageView
+            android:id="@+id/moonIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/moon_icon" />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/creditsHead"
@@ -126,7 +150,9 @@
         android:strokeColor="#000000"
         android:strokeWidth="5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/black_bar"
+        />
 
     <TextView
         android:id="@+id/creditsCount"
@@ -143,8 +169,9 @@
         android:strokeColor="#000000"
         android:strokeWidth="5"
         app:layout_constraintStart_toEndOf="@+id/creditsHead"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/black_bar"
+        />
 
     <TextView
         android:id="@+id/subscriptionHead"
@@ -161,7 +188,9 @@
         android:strokeColor="#000000"
         android:strokeWidth="5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/black_bar"
+        />
 
     <TextView
         android:id="@+id/subscriptionStatus"
@@ -178,33 +207,21 @@
         android:strokeColor="#000000"
         android:strokeWidth="5"
         app:layout_constraintStart_toEndOf="@+id/creditsCount"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btnDailyReward"
-        android:layout_width="163dp"
-        android:layout_height="49dp"
-        android:layout_marginTop="-450dp"
-        android:layout_marginEnd="-180dp"
-        android:backgroundTint="@color/teal_700"
-        android:text="@string/dailyReward"
-        android:textColor="#000000"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toStartOf="@+id/chatView"
-        app:layout_constraintTop_toBottomOf="@+id/chatView" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/black_bar"
+        />
 
     <Button
         android:id="@+id/btnShop"
-        android:layout_width="163dp"
-        android:layout_height="49dp"
-        android:layout_marginTop="-450dp"
-        android:layout_marginEnd="-380dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="150dp"
         android:backgroundTint="@color/teal_700"
         android:text="@string/btnShop"
         android:textColor="#000000"
         android:textSize="12sp"
-        app:layout_constraintEnd_toStartOf="@+id/chatView"
-        app:layout_constraintTop_toBottomOf="@+id/chatView" />
-
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

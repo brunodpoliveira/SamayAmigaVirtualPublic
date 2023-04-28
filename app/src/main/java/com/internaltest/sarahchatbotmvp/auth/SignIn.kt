@@ -1,0 +1,164 @@
+package com.internaltest.sarahchatbotmvp.auth
+
+import android.content.ContentValues.TAG
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.util.Log
+import android.widget.Button
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.common.SignInButton
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
+import com.internaltest.sarahchatbotmvp.R
+import com.internaltest.sarahchatbotmvp.base.BaseActivity
+import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
+import com.qonversion.android.sdk.Qonversion
+import kotlinx.coroutines.launch
+import java.util.*
+
+class SignIn : BaseActivity() {
+    private var signInButton: SignInButton? = null
+    private var privacyBtn: Button? = null
+    private var termsOfUseBtn: Button? = null
+    private var mSignInClient: GoogleSignInClient? = null
+    private lateinit var auth: FirebaseAuth
+    private lateinit var firestoreRepo: FirestoreRepo
+    companion object {
+        private const val RC_SIGN_IN = 1
+        var isCurrentActivity = false
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_sign_in)
+        privacyBtn = findViewById(R.id.privacy)
+        termsOfUseBtn = findViewById(R.id.terms_of_use)
+        auth = Firebase.auth
+        firestoreRepo = FirestoreRepo()
+        with(privacyBtn) {
+            this?.setOnClickListener { gotoPrivacy() }
+        }
+        with(termsOfUseBtn) {
+            this?.setOnClickListener { gotoTermsOfUse() }
+        }
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(
+                "OAUTH_CLIENT_HERE")
+            .requestEmail()
+            .build()
+        mSignInClient = GoogleSignIn.getClient(this, gso)
+        signInButton = findViewById(R.id.sign_in_button)
+        with(signInButton) {
+            this?.setOnClickListener {
+                val intent = mSignInClient!!.signInIntent
+                startActivityForResult(intent, RC_SIGN_IN)
+            }
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        isCurrentActivity = true
+    }
+    override fun onPause() {
+        super.onPause()
+        isCurrentActivity = false
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SIGN_IN) {
+            val result = Auth.GoogleSignInApi.getSignInResultFromIntent(
+                data!!
+            )
+            Objects.requireNonNull(result)?.let { handleSignInResult(it) }
+        }
+    }
+
+    private fun handleSignInResult(result: GoogleSignInResult) {
+        val task = mSignInClient!!.silentSignIn()
+        if (result.isSuccess && task.isSuccessful) {
+            val account = task.result
+            Objects.requireNonNull(account.id)?.let { Qonversion.shared.identify(it) }
+            val idToken = account?.idToken
+            if (idToken != null) {
+                firebaseAuthWithGoogle(idToken)
+            } else {
+                Log.e(TAG, "Error: idToken is null")
+                Toast.makeText(
+                    applicationContext,
+                    "Login cancelado/Erro durante Login: idToken is null",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } else {
+            Log.e(TAG, "Login failed. Status code: ${result.status.statusCode}. " +
+                    "Status message: ${result.status.statusMessage}")
+            // Display the error message in a Toast
+            Toast.makeText(
+                applicationContext,
+                "Login failed. Status code: ${result.status.statusCode}. " +
+                        "Status message: ${result.status.statusMessage}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithCredential:success")
+                    val user = auth.currentUser
+                    lifecycleScope.launch {
+                        val isDocumentCreatedOrExists = firestoreRepo.initUserDocumentAsync(user!!).await()
+                        if (!isDocumentCreatedOrExists) {
+                            Log.w(TAG, "initUserDocumentAsync:failure", task.exception)
+                            Toast.makeText(applicationContext,
+                                "Login cancelado/Erro durante Login initUserDocumentAsync",
+                                Toast.LENGTH_LONG).show()
+                        } else {
+                            gotoChat()
+                        }
+                    }
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    Toast.makeText(
+                        applicationContext,
+                        "Login cancelado/Erro durante Login signInWithCredential",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+    }
+
+    private fun gotoChat() {
+        val intent = Intent(this@SignIn, MainActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun gotoPrivacy() {
+        val browserIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("PRIVACY_LINK_HERE")
+        )
+        startActivity(browserIntent)
+    }
+
+    private fun gotoTermsOfUse() {
+        val browserIntent =
+            Intent(Intent.ACTION_VIEW, Uri.parse("TERMS_OF_USE_LINK_HERE"))
+        startActivity(browserIntent)
+    }
+}
