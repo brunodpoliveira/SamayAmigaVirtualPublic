@@ -1,35 +1,45 @@
 package com.internaltest.sarahchatbotmvp.ui.main
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SwitchCompat
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.play.core.tasks.Task
+import com.google.firebase.firestore.FirebaseFirestore
+import com.internaltest.sarahchatbotmvp.BuildConfig
 import com.internaltest.sarahchatbotmvp.R
-import com.internaltest.sarahchatbotmvp.utils.ShowNotification
-import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter
 import com.internaltest.sarahchatbotmvp.base.BaseActivity
+import com.internaltest.sarahchatbotmvp.data.BillingManager
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.models.Message
+import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter
 import com.internaltest.sarahchatbotmvp.ui.wallet.Wallet
+import com.internaltest.sarahchatbotmvp.utils.NotificationScheduler
 import com.theokanning.openai.OpenAiApi
+import com.theokanning.openai.OpenAiHttpException
 import com.theokanning.openai.completion.chat.ChatCompletionChoice
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatMessage
@@ -37,20 +47,25 @@ import com.theokanning.openai.service.OpenAiService
 import com.theokanning.openai.service.OpenAiService.buildApi
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
-import androidx.appcompat.widget.SwitchCompat
 
 //TODO adicionar menu dropdown
 //TODO msgs são apagadas quando o usuário sai da tela. Restaurar a conversa e adicionar opção para
 //apagar/reiniciar a conversa
 @SuppressLint("NotifyDataSetChanged")
 class MainActivity : BaseActivity() {
+
     private lateinit var firestoreRepo: FirestoreRepo
-    private var msgCounter = 0
+    private lateinit var billingManager: BillingManager
+    private lateinit var wallet: Wallet
+    private lateinit var textToSpeech: TextToSpeech
+
+    private var thisSessionMsgCounter = 0
     private var chatView: RecyclerView? = null
     private var chatAdapter: ChatAdapter? = null
     private var messageList: MutableList<Message> = ArrayList()
@@ -58,7 +73,8 @@ class MainActivity : BaseActivity() {
     private var btnSend: ImageButton? = null
     private var configProfile: FloatingActionButton? = null
     private var progressDialog: ProgressDialog? = null
-    private var btnToggleDark: SwitchCompat? = null
+    private var toggleDarkSwitch: SwitchCompat? = null
+    private var textToSpeechSwitch: SwitchCompat? = null
     private var btnShop: Button? = null
     private var subscriptionHeadTextView: TextView? = null
     private var creditsHeadTextView: TextView? = null
@@ -66,10 +82,13 @@ class MainActivity : BaseActivity() {
     private var creditsTextView: TextView? = null
     private var userId: String? = null
     private var pressedTime: Long = 0
-    private lateinit var wallet: Wallet
     private var isDarkModeOn: Boolean? = null
     private var isRewardPopupShown = false
     private var isDailyLoginRewardRunning = false
+    private var isTextToSpeechOn: Boolean? = null
+    private var textToSpeechInitialized = false
+    private var speak: FloatingActionButton? = null
+    private val REQUEST_CODE_SPEECH_INPUT = 1
 
     private val msgs: MutableList<ChatMessage> = ArrayList()
 
@@ -78,7 +97,7 @@ class MainActivity : BaseActivity() {
         firestoreRepo = FirestoreRepo()
         CoroutineScope(Dispatchers.Main).launch {
             isDarkModeOn = firestoreRepo.darkMode.first()
-            btnToggleDark?.isChecked = isDarkModeOn as Boolean
+            toggleDarkSwitch?.isChecked = isDarkModeOn as Boolean
             AppCompatDelegate.setDefaultNightMode(
                 if (isDarkModeOn as Boolean) {
                     AppCompatDelegate.MODE_NIGHT_YES
@@ -87,14 +106,19 @@ class MainActivity : BaseActivity() {
                 }
             )
         }
+        CoroutineScope(Dispatchers.Main).launch {
+            isTextToSpeechOn = firestoreRepo.textToSpeech.first()
+            textToSpeechSwitch?.isChecked = isTextToSpeechOn as Boolean
+        }
         setContentView(R.layout.activity_main)
         loadFireStoreInfo()
+        billingManager = FirestoreRepo().getUserId()?.let { BillingManager(this, it) }!!
         editMessage = findViewById(R.id.editMessage)
         btnSend = findViewById(R.id.btnSend)
         chatAdapter = ChatAdapter(messageList, this)
         chatView = findViewById(R.id.chatView)
         with(chatView) { this?.setAdapter(chatAdapter) }
-        btnToggleDark = findViewById(R.id.btnToggleDark)
+        toggleDarkSwitch = findViewById(R.id.toggleDarkSwitch)
         btnShop = findViewById(R.id.btnShop)
         with(btnShop) { this?.setOnClickListener { gotoShop() } }
         configProfile = findViewById(R.id.config)
@@ -105,15 +129,86 @@ class MainActivity : BaseActivity() {
         subscriptionHeadTextView = findViewById(R.id.subscriptionHead)
         creditsTextView = findViewById(R.id.creditsCount)
         subscriptionTextView = findViewById(R.id.subscriptionStatus)
+        speak = findViewById(R.id.speak)!!
+        textToSpeechSwitch = findViewById<SwitchCompat>(R.id.textToSpeechSwitch).apply {
+            setOnCheckedChangeListener { _, isChecked ->
+                // Save the preference to Firestore when the switch is toggled
+                CoroutineScope(Dispatchers.Main).launch {
+                    firestoreRepo.setTextToSpeech(isChecked)
+                }
+            }
+        }
+        speak!!.setOnClickListener {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                Locale.getDefault()
+            )
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Voz para texto")
+
+            val activities: List<ResolveInfo> = packageManager.queryIntentActivities(
+                intent,
+                PackageManager.MATCH_DEFAULT_ONLY
+            )
+
+            if (activities.isNotEmpty()) {
+                try {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
+                        PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            this,
+                            arrayOf(Manifest.permission.RECORD_AUDIO),
+                            REQUEST_CODE_SPEECH_INPUT
+                        )
+                    } else {
+                        startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT)
+                    }
+                } catch (e: Exception) {
+                    Toast
+                        .makeText(
+                            this@MainActivity,
+                            " " + e.message,
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
+                    Log.e("Exception", e.toString())
+                }
+            } else {
+                Toast
+                    .makeText(
+                        this@MainActivity,
+                        "Por favor instale um app de reconhecimento de fala",
+                        Toast.LENGTH_LONG).show()
+            }
+        }
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status != TextToSpeech.ERROR) {
+                textToSpeech.language = Locale("pt", "BR")
+                textToSpeechInitialized = true
+                if (messageList.isNotEmpty() && textToSpeechSwitch!!.isChecked) {
+                    // Speak the initial message if Text-to-Speech is enabled
+                    messageList.firstOrNull()?.let { speakText(it.message).toString() }
+                    messageList.firstOrNull()?.let { Log.i("addAndSpeakInitialMessage", it.message) }
+                }
+            }
+        }
         wallet = Wallet()
         wallet.checkAndSwitchEntitlements()
         dailyLoginReward()
-        scheduleNotification()
+        checkForUpdate()
+        NotificationScheduler.scheduleDailyNotification(this)
+        NotificationScheduler.scheduleInactiveNotification(this)
+        NotificationScheduler.scheduleXmasNotification(this)
 
         //implementando lógica do botão modo escuro
-        btnToggleDark?.setOnClickListener {
-            val isChecked = btnToggleDark?.isChecked ?: false
-            btnToggleDark!!.isChecked = !isChecked // Revert the switch state temporarily
+        toggleDarkSwitch?.setOnClickListener {
+            val isChecked = toggleDarkSwitch?.isChecked ?: false
+            toggleDarkSwitch!!.isChecked = !isChecked // Revert the switch state temporarily
             val alertDialogBuilder = AlertDialog.Builder(this)
             alertDialogBuilder.setMessage(
                 "Tem certeza? Todo o histórico de conversa será apagado ao trocar tema"
@@ -157,7 +252,7 @@ class MainActivity : BaseActivity() {
 
                 alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
                     alertDialog.dismiss() // Close the dialog after handling the click
-                    btnToggleDark!!.isChecked = !isChecked // Revert the switch state
+                    toggleDarkSwitch!!.isChecked = !isChecked // Revert the switch state
                 }
             }
             alertDialog.show()
@@ -185,47 +280,53 @@ class MainActivity : BaseActivity() {
                     .show()
             }
         }
-
-        //msgs de aviso e para começar a conversação
-        Objects.requireNonNull(with(chatView)
-        { this?.layoutManager })?.scrollToPosition(messageList.size - 1)
-        messageList.add(
-            Message(
-                "A seguir, você terá uma conversa com uma amiga virtual, chamada Samay. " +
-                        "A assistente é útil, criativa, inteligente e muito amigável. " +
-                        "Divirta-se usando a Samay!", true
-            )
-        )
-        chatAdapter!!.notifyDataSetChanged()
-        Objects.requireNonNull(with(chatView)
-        { this?.layoutManager })?.scrollToPosition(messageList.size - 1)
     }
+
     private fun applyDarkMode(isDarkModeOn: Boolean?) {
         if (isDarkModeOn == true) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
-        btnToggleDark!!.isChecked = isDarkModeOn ?: false
+        toggleDarkSwitch!!.isChecked = isDarkModeOn ?: false
     }
-    private fun scheduleNotification() {
-        val workRequest =
-            PeriodicWorkRequest.Builder(ShowNotification::class.java, 1, TimeUnit.DAYS)
-            .build()
 
-        WorkManager.getInstance(this)
-            .enqueueUniquePeriodicWork(
-                "notification", ExistingPeriodicWorkPolicy.KEEP, workRequest)
+    private fun addAndSpeakInitialMessage() {
+        Objects.requireNonNull(with(chatView) { this?.layoutManager })
+            ?.scrollToPosition(messageList.size - 1)
+        messageList.add(
+            Message(
+                "A seguir, você terá uma conversa com uma amiga virtual, chamada Samay. " +
+                        "A assistente é útil, criativa, inteligente e muito amigável. " +
+                        "Divirta-se usando a Samay!",
+                true
+            )
+        )
+        chatAdapter!!.notifyDataSetChanged()
+        Objects.requireNonNull(with(chatView) { this?.layoutManager })
+            ?.scrollToPosition(messageList.size - 1)
+
     }
 
     private fun loadFireStoreInfo() {
         // Observe dark mode changes
         firestoreRepo.darkMode.asLiveData().observe(this) {
             isDarkModeOn = it
+            toggleDarkSwitch?.isChecked = it
             Log.i("is dark mode on (load data store)", isDarkModeOn.toString())
+            if (messageList.isEmpty()) {
+                addAndSpeakInitialMessage()
+            }
+        }
+
+        firestoreRepo.textToSpeech.asLiveData().observe(this) {
+            isTextToSpeechOn = it
+            textToSpeechSwitch?.isChecked = it
+            Log.i("textToSpeech (load data store)", isTextToSpeechOn.toString())
         }
 
         // Observe credits changes
+        firestoreRepo.startListeningForCreditUpdates()
         firestoreRepo.credits.asLiveData().observe(this) { credits ->
             with(creditsTextView) { this?.text = credits.toString() }
             Log.i("credits (load data store)", credits.toString())
@@ -249,19 +350,30 @@ class MainActivity : BaseActivity() {
         val year = calendar[Calendar.YEAR]
         val month = calendar[Calendar.MONTH] + 1
         val day = calendar[Calendar.DAY_OF_MONTH]
-        val todaystring = year.toString() + "" + month + "" + day + ""
+        val todaystring = String.format("%04d%02d%02d", year, month, day)
 
         CoroutineScope(Dispatchers.Main).launch {
             firestoreRepo.fetchDailyLoginReward()
             val lastLoginDay = firestoreRepo.dailyLoginDay.first()
 
-            if (lastLoginDay.isEmpty()) {
-                // New user, show the reward popup
-                Log.i("showrewardpopup", "isempty")
+            var isOldDate = false
+            val lastLoginDate = try {
+                SimpleDateFormat("yyyyMMdd", Locale.getDefault()).parse(lastLoginDay)
+            } catch (e: ParseException) {
+                isOldDate = true
+                null
+            }
+
+            if (lastLoginDay.isEmpty() || isOldDate || lastLoginDate == null) {
+                // New user or old date format, show the reward popup
+                Log.i("showrewardpopup", "isempty or old date format")
+                Log.i("lastLoginDay", lastLoginDay)
                 showRewardPopup()
+                if (isOldDate) {
+                    // Delete the old date
+                    firestoreRepo.deleteOldDailyLoginReward()
+                }
             } else {
-                val lastLoginDate =
-                    SimpleDateFormat("yyyyMMdd", Locale.getDefault()).parse(lastLoginDay)
                 val currentDate =
                     SimpleDateFormat("yyyyMMdd", Locale.getDefault()).parse(todaystring)
                 val diffInMillis = currentDate!!.time - lastLoginDate!!.time
@@ -293,7 +405,7 @@ class MainActivity : BaseActivity() {
         val year = calendar[Calendar.YEAR]
         val month = calendar[Calendar.MONTH] + 1
         val day = calendar[Calendar.DAY_OF_MONTH]
-        val todaystring = year.toString() + "" + month + "" + day + ""
+        val todaystring = String.format("%04d%02d%02d", year, month, day)
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Créditos grátis")
         builder.setMessage("Aperte aqui para créditos grátis")
@@ -326,6 +438,7 @@ class MainActivity : BaseActivity() {
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
         alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
     }
+
     private fun isTimeAutomatic(mainActivity: MainActivity): Boolean {
         return Settings.Global.getInt(
             mainActivity.contentResolver,
@@ -333,6 +446,7 @@ class MainActivity : BaseActivity() {
             0
         ) == 1
     }
+
     private fun isZoneAutomatic(mainActivity: MainActivity): Boolean {
         return Settings.Global.getInt(
             mainActivity.contentResolver,
@@ -340,11 +454,95 @@ class MainActivity : BaseActivity() {
             0
         ) == 1
     }
+
+    private fun speakText(text: String) {
+        if (textToSpeechSwitch?.isChecked == true && textToSpeechInitialized) {
+            textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_id")
+        }
+    }
+
+    private fun incrementMessageSentCounter() {
+        CoroutineScope(Dispatchers.Main).launch {
+            firestoreRepo.totalMsgs.first().let { currentMsgs ->
+                firestoreRepo.setTotalMsgs(currentMsgs + 1)
+            }
+        }
+    }
+
+    private fun checkForUpdate() {
+        val firestore = FirebaseFirestore.getInstance()
+        val appVersionRef = firestore.collection("app_version").document("latest")
+        appVersionRef.get().addOnSuccessListener { document ->
+            if (document != null) {
+                Log.d("Firestore", "Fetched document: ${document.id}")
+
+                val latestVersion = document.getString("latest_version")
+                if (latestVersion != null) {
+                    Log.d("Firestore", "Fetched latest_version: $latestVersion")
+                    if (isUpdateAvailable(latestVersion)) {
+                        showUpdatePopup()
+                    }
+                } else {
+                    Log.d("Firestore", "latest_version field not found.")
+                }
+            } else {
+                Log.d("Firestore", "Document not found.")
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("Firestore", "Error fetching document: ", exception)
+        }
+    }
+
+    private fun isUpdateAvailable(latestVersion: String): Boolean {
+        val currentVersion: String
+        try {
+            currentVersion = packageManager.getPackageInfo(packageName, 0).versionName
+            Log.i("currentVersion",currentVersion)
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+            return false
+        }
+        return currentVersion != latestVersion
+    }
+
+    private fun showUpdatePopup() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Atualização Disponível")
+        builder.setMessage("Uma nova versão do app está disponível." +
+                "Favor atualize para a última versão.")
+        builder.setPositiveButton("Atualizar") { _, _ ->
+            // Redirect the user to the app's page in the Google Play Store
+            val appPackageName = packageName
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=$appPackageName")))
+            } catch (e: android.content.ActivityNotFoundException) {
+                startActivity(Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")))
+            }
+        }
+        builder.setNegativeButton("Agora Não", null)
+        val alertDialog = builder.create()
+        alertDialog.show()
+
+        val currentTheme = AppCompatDelegate.getDefaultNightMode()
+
+        // Set the text color for the positive and negative buttons based on the current theme
+        val buttonTextColor = if (currentTheme == AppCompatDelegate.MODE_NIGHT_YES) {
+            Color.WHITE
+        } else {
+            Color.BLACK
+        }
+        alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
+        alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
+    }
+
     private fun checkSubscriptionAndCreditsAndStartMessageLoop(message: String) {
         CoroutineScope(Dispatchers.Main).launch {
             if (subscriptionTextView?.text == "PREMIUM" || subscriptionTextView?.text == "GPT4") {
                 Log.i("start message Premium/GPT4", message)
                 gptMessage(message)
+                firestoreRepo.onUserActivity(applicationContext)
             } else {
                 firestoreRepo.credits.first().let { currentCredits ->
                     if (currentCredits > 0) {
@@ -352,11 +550,13 @@ class MainActivity : BaseActivity() {
                         // send the message
                         Log.i("start message minus", message)
                         gptMessage(message)
+                        firestoreRepo.onUserActivity(applicationContext)
                     } else {
                         runOnUiThread {
                             progressDialog!!.dismiss()
                             CoroutineScope(Dispatchers.IO).launch {
                                 firestoreRepo.setCredits(0)
+                                firestoreRepo.onUserActivity(applicationContext)
                             }
                             showDialogNoCredits()
                         }
@@ -391,18 +591,63 @@ class MainActivity : BaseActivity() {
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
         alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
     }
-    private fun gptMessage(clientMessage: String){
-         val thread = Thread {
+
+    private fun feedbackPopup() {
+        val alertDialog = AlertDialog.Builder(this@MainActivity)
+            .setTitle("Responder Formulário?")
+            .setMessage("Ganhe 50 créditos grátis respondendo esse formulário")
+            .setPositiveButton("Responder formulário") { _, _ ->
+                gotoForm()
+            }
+            .setNegativeButton("Agora não") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+
+        alertDialog.show()
+        // Get the current theme
+        val currentTheme = AppCompatDelegate.getDefaultNightMode()
+
+        // Set the text color for the positive and negative buttons based on the current theme
+        val buttonTextColor = if (currentTheme == AppCompatDelegate.MODE_NIGHT_YES) {
+            Color.WHITE
+        } else {
+            Color.BLACK
+        }
+        alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
+        alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
+    }
+
+    private fun handleTimeoutError(elapsedTime: Long, timeout: Int): Boolean {
+        if (elapsedTime > timeout * 1000) {
+            runOnUiThread {
+                progressDialog!!.dismiss()
+                CoroutineScope(Dispatchers.Main).launch {
+                    firestoreRepo.credits.first().let { currentCredits ->
+                        firestoreRepo.setCredits(currentCredits + 1)
+                        // Show timeout error to the client
+                        Toast.makeText(this@MainActivity, "Erro: " +
+                                "O servidor demorou demais para responder", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun gptMessage(clientMessage: String) {
+        val thread = Thread {
             try {
-                val token = "OPEN_AI_API_KEY_HERE"
-                val timeout = 2600
+                val token = BuildConfig.API_KEY
+                val timeout = 30  // Set timeout value to 30 seconds
                 val api: OpenAiApi = buildApi(token, Duration.ofSeconds(timeout.toLong()))
                 val service = OpenAiService(api)
-                Log.i("\nUser Input:",clientMessage)
+                Log.i("\nUser Input:", clientMessage)
                 val message = ChatMessage("user", clientMessage)
-                val model: String = if (subscriptionTextView?.text == "GPT4"){
+                val model: String = if (subscriptionTextView?.text == "GPT4") {
                     "gpt-4"
-                }else{
+                } else {
                     "gpt-3.5-turbo"
                 }
                 // Add the initial assistant message with the prompt
@@ -414,7 +659,8 @@ class MainActivity : BaseActivity() {
                         "perguntas anteriores na conversa."
                 val initialAssistantMessage = ChatMessage("assistant", initialPrompt)
                 Log.i("\ninitialAssistantMessage:", initialAssistantMessage.toString())
-                if (msgCounter == 0){
+
+                if (thisSessionMsgCounter == 0) {
                     msgs.add(initialAssistantMessage)
                     val initialChatCompletionRequest = ChatCompletionRequest.builder()
                         .model(model)
@@ -426,14 +672,42 @@ class MainActivity : BaseActivity() {
                         .presencePenalty(.8)
                         .user(userId)
                         .build()
-                    val initialChoices =
-                        service.createChatCompletion(initialChatCompletionRequest).choices.stream()
-                        .map { obj: ChatCompletionChoice -> obj.message }.collect(Collectors.toList())
-                    println(initialChoices[0].content.toString())
-                    Log.i("\nOpenAi initialChatCompletionRequest:",
-                        initialChatCompletionRequest.toString())
-                    Log.i("\nOpenAi Initial Output:", initialChoices.toString())
-                    Log.i("\nOpenAi msgs:", msgs.toString())
+                    Log.i("\ninitialChatCompletionRequest:", initialChatCompletionRequest.toString())
+                    try {
+                        val startTime = System.currentTimeMillis()
+                        val initialHttpResponse = service.createChatCompletion(initialChatCompletionRequest)
+                        val elapsedTime = System.currentTimeMillis() - startTime
+                        Log.i("\ninitialHttpResponse:", initialHttpResponse.toString())
+
+                        if (handleTimeoutError(elapsedTime, timeout)) {
+                            return@Thread
+                        }
+
+                        val initialChoices = initialHttpResponse.choices.stream()
+                            .map { obj: ChatCompletionChoice -> obj.message }.collect(Collectors.toList())
+                        thisSessionMsgCounter += 1
+
+                        println(initialChoices[0].content.toString())
+                        Log.i("\nOpenAi initialChatCompletionRequest:",
+                            initialChatCompletionRequest.toString())
+                        Log.i("\nOpenAi Initial Output:", initialChoices.toString())
+                        Log.i("\nOpenAi msgs:", msgs.toString())
+                    } catch (e: OpenAiHttpException) {
+                        e.printStackTrace()
+                        runOnUiThread {
+                            progressDialog!!.dismiss()
+                            CoroutineScope(Dispatchers.Main).launch {
+                                firestoreRepo.credits.first().let { currentCredits ->
+                                    firestoreRepo.setCredits(currentCredits + 1)
+                                }
+                            }
+                            // Show error message to the client
+                            Toast.makeText(this@MainActivity,
+                                "Erro de Servidor: ${e.message}. Favor tente mais tarde.",
+                                Toast.LENGTH_SHORT).show()
+                        }
+                        return@Thread
+                    }
                 }
 
                 msgs.add(message)
@@ -449,42 +723,94 @@ class MainActivity : BaseActivity() {
                     .user(userId)
                     .build()
 
-                val choices = service.createChatCompletion(chatCompletionRequest).choices.stream()
-                    .map { obj: ChatCompletionChoice -> obj.message }.collect(Collectors.toList())
-                println(choices[0].content.toString())
-                Log.i("\nOpenAi chatCompletionRequest:",
-                    chatCompletionRequest.toString())
-                Log.i("\nOpenAi Output:", choices.toString())
+                try {
+                    val startTimeForChoices = System.currentTimeMillis()
+                    val httpResponse = service.createChatCompletion(chatCompletionRequest)
+                    val elapsedTimeForChoices = System.currentTimeMillis() - startTimeForChoices
 
-                if (choices.isNotEmpty()) {
-                    runOnUiThread {
-                        progressDialog!!.dismiss()
-                        messageList.add(Message(choices[0].content.toString().trim(), true))
-                        chatAdapter!!.notifyDataSetChanged()
-                        Objects.requireNonNull(chatView!!.layoutManager)
-                            ?.scrollToPosition(messageList.size - 1)
-                        msgCounter += 1
-                        Log.i("msgCounter", msgCounter.toString())
-                        if (msgCounter >= 10) {
-                            askRatings()
+                    if (handleTimeoutError(elapsedTimeForChoices, timeout)) {
+                        return@Thread
+                    }
+
+                    val choices = httpResponse.choices.stream()
+                        .map { obj: ChatCompletionChoice -> obj.message }.collect(Collectors.toList())
+
+                    println(choices[0].content.toString())
+                    Log.i("\nOpenAi chatCompletionRequest:",
+                        chatCompletionRequest.toString())
+                    Log.i("\nOpenAi Output:", choices.toString())
+
+                    if (choices.isNotEmpty()) {
+                        runOnUiThread {
+                            progressDialog!!.dismiss()
+                            messageList.add(Message(choices[0].content.toString().trim(), true))
+                            speakText(choices[0].content.toString().trim())
+                            Log.i("speakText", messageList[0].toString())
+                            chatAdapter!!.notifyDataSetChanged()
+                            Objects.requireNonNull(chatView!!.layoutManager)?.scrollToPosition(messageList.size - 1)
+                            thisSessionMsgCounter += 1
+                            incrementMessageSentCounter()
+                            Log.i("thisSessionMsgCounter", thisSessionMsgCounter.toString())
+                            if (thisSessionMsgCounter >= 10) {
+                                askRatings()
+                            }
+                            CoroutineScope(Dispatchers.Main).launch {
+                                firestoreRepo.totalMsgs.first().let { currentMsgs ->
+                                    if (currentMsgs == 20 || currentMsgs == 50){
+                                        feedbackPopup()
+                                    }
+                                }
+                            }
                         }
                     }
+                } catch (e: OpenAiHttpException) {
+                    e.printStackTrace()
+                    runOnUiThread {
+                        progressDialog!!.dismiss()
+                        CoroutineScope(Dispatchers.Main).launch {
+                            firestoreRepo.credits.first().let { currentCredits ->
+                                firestoreRepo.setCredits(currentCredits + 1)
+                                // Show timeout error to the client
+                                Toast.makeText(this@MainActivity, "Erro: " +
+                                        "O servidor demorou demais para responder",
+                                    Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                    return@Thread
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                runOnUiThread {
+                    progressDialog!!.dismiss()
+                    // Show error message to the client
+                    Toast.makeText(this@MainActivity,
+                        "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
         thread.start()
     }
+
     private fun gotoProfile() {
         val intent = Intent(this@MainActivity, ProfileActivity::class.java)
         startActivity(intent)
     }
+
     private fun gotoShop() {
         val intent = Intent(this@MainActivity, Wallet::class.java)
         startActivity(intent)
     }
-// lógica de pedir avaliação na app store
+
+    private fun gotoForm() {
+        val browserIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://forms.gle/qZ58bYfMQMew7S6P6")
+        )
+        startActivity(browserIntent)
+    }
+
+    // lógica de pedir avaliação na app store
     private fun askRatings() {
         val manager = ReviewManagerFactory.create(this)
         val request = manager.requestReviewFlow()
@@ -500,6 +826,7 @@ class MainActivity : BaseActivity() {
             }
         }
     }
+
     //mostrar confirmação antes de sair quando usuário apertar o botão voltar
     override fun onBackPressed() {
         if (pressedTime + 2000 > System.currentTimeMillis()) {
@@ -510,5 +837,25 @@ class MainActivity : BaseActivity() {
                 .show()
         }
         pressedTime = System.currentTimeMillis()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_SPEECH_INPUT) {
+            if (resultCode == RESULT_OK && data != null) {
+                val res: ArrayList<String> =
+                    data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
+                editMessage?.setText(Objects.requireNonNull(res)[0])
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Remove the listener when the user logs out or the activity is destroyed
+        firestoreRepo.userDocListenerRegistration.remove()
+        textToSpeech.stop()
+        textToSpeech.shutdown()
     }
 }

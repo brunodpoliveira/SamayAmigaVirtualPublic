@@ -1,15 +1,27 @@
 package com.internaltest.sarahchatbotmvp.data
 
+import android.content.Context
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.*
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.ktx.Firebase
+import com.internaltest.sarahchatbotmvp.utils.NotificationScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 class FirestoreRepo {
@@ -17,6 +29,7 @@ class FirestoreRepo {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private var lastCreditDate : LocalDateTime? = null
+    lateinit var userDocListenerRegistration: ListenerRegistration
 
     // MutableStateFlow for subscription status, credits, dark mode, and daily login
     private val _subscriptionStatus = MutableStateFlow("NENHUMA")
@@ -25,8 +38,14 @@ class FirestoreRepo {
     private val _credits = MutableStateFlow(0)
     val credits: Flow<Int> = _credits.asStateFlow()
 
+    private val _totalMsgs = MutableStateFlow(0)
+    val totalMsgs: Flow<Int> = _totalMsgs.asStateFlow()
+
     private val _darkMode = MutableStateFlow(false)
     val darkMode: Flow<Boolean> = _darkMode.asStateFlow()
+
+    private val _textToSpeech = MutableStateFlow(false)
+    val textToSpeech: Flow<Boolean> = _textToSpeech.asStateFlow()
 
     private val _dailyLoginDay = MutableStateFlow("")
     val dailyLoginDay: Flow<String> = _dailyLoginDay.asStateFlow()
@@ -39,22 +58,44 @@ class FirestoreRepo {
 
     suspend fun fetchData() {
         // Fetch initial values from Firestore
-            fetchSubscriptionStatus()
-            val initialCredits = fetchCredits()
-            _credits.value = initialCredits
-            fetchDarkMode()
-            fetchDailyLoginReward()
+        fetchSubscriptionStatus()
+        val initialCredits = fetchCredits()
+        _credits.value = initialCredits
+        val initialMsgs = fetchTotalMsgs()
+        _totalMsgs.value = initialMsgs
+        fetchDarkMode()
+        fetchTextToSpeech()
+        fetchDailyLoginReward()
     }
 
-    private fun getUserDocument(): DocumentReference? {
+    fun getUserDocument(): DocumentReference? {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             Log.e("getUserDocument", "User not logged in")
             return null
         }
         val userDocument = firestore.collection("users").document(currentUser.uid)
+        Firebase.auth.currentUser?.getIdToken(true)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val idToken = task.result?.token
+                Log.i("Firebase Auth", "ID Token: $idToken")
+            } else {
+                Log.e("Firebase Auth", "Failed to get ID token", task.exception)
+            }
+        }
         Log.i("getUserDocument", "User document path: ${userDocument.path}")
+
         return userDocument
+    }
+
+    fun getUserId(): String? {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.e("getUserId", "User not logged in")
+            return null
+        }
+        Log.i("getUserId", currentUser.uid)
+        return currentUser.uid
     }
 
     private suspend fun fetchSubscriptionStatus() {
@@ -95,6 +136,69 @@ class FirestoreRepo {
         }
     }
 
+
+
+    fun startListeningForCreditUpdates() {
+        val userDocument = getUserDocument()
+        if (userDocument != null) {
+            userDocListenerRegistration = userDocument.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("Firestore", "Error listening for credit updates: $error")
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && snapshot.exists()) {
+                    val fetchedCredits = snapshot.get("credits") as? Long
+                    Log.e("Firestore startListeningForCreditUpdates",fetchedCredits.toString())
+                    // Update the app's UI with the new credit balance
+                    CoroutineScope(Dispatchers.Main).launch {
+                        setCredits(fetchedCredits?.toInt()!!)
+                        }
+                    }
+                }
+            }
+        }
+
+    private suspend fun fetchTotalMsgs(): Int {
+        val userDocument = getUserDocument()
+        if (userDocument != null) {
+            val userData = userDocument.get().await()
+            Log.i("fetchTotalMsgs", "Snapshot data: ${userData.data}")
+            val fetchedTotalMsgs = userData.get("total_messages_sent") as? Long
+            Log.i("fetchedTotalMsgs", "Fetched TotalMsgs: $fetchedTotalMsgs")
+            return fetchedTotalMsgs?.toInt() ?: 0
+        }
+        return 0
+    }
+
+    suspend fun setTotalMsgs(newMsgs: Int) {
+        val userDocument = getUserDocument()
+        if (userDocument != null) {
+            userDocument.update("total_messages_sent", newMsgs).await()
+            _totalMsgs.value = newMsgs
+        }
+    }
+
+    private suspend fun fetchTextToSpeech() {
+        val userDocument = getUserDocument()
+        if (userDocument != null) {
+            val textToSpeechStatus = userDocument.get().await()["text_to_speech"] as? Boolean
+            if (textToSpeechStatus != null) {
+                _textToSpeech.value = textToSpeechStatus
+            }
+        }
+    }
+
+    suspend fun setTextToSpeech(newStatus: Boolean): Boolean {
+        val userDocument = getUserDocument()
+        return if (userDocument != null) {
+            userDocument.update("text_to_speech", newStatus).await()
+            _textToSpeech.value = newStatus
+            true
+        } else {
+            false
+        }
+    }
+
     private suspend fun fetchDarkMode() {
         val userDocument = getUserDocument()
         if (userDocument != null) {
@@ -131,11 +235,16 @@ class FirestoreRepo {
                             "photo_url" to user.photoUrl?.toString(),
                             "subscription_status" to "NENHUMA",
                             "credits" to 0,
+                            "total_messages_sent" to 0,
                             "dark_mode" to false,
+                            "text_to_speech" to false,
                             "daily_login_day" to "",
+                            "last_active" to "",
+                            "last_notification_check" to "",
                             "last_credit_date" to "",
                         )
-                        userDocument.set(defaultData).await()
+                        userDocument.set(defaultData, SetOptions.merge()).await() // Force sync
+                        fetchData()
                     }
                     true
                 } catch (e:Exception) {
@@ -147,6 +256,16 @@ class FirestoreRepo {
             return CoroutineScope(Dispatchers.IO).async { false }
         }
     }
+
+    suspend fun deleteOldDailyLoginReward() {
+        val userDocument = getUserDocument()
+        if (userDocument != null) {
+            firestore.runTransaction { transaction ->
+                transaction.update(userDocument, "daily_login_day", "")
+            }.await()
+        }
+    }
+
     suspend fun scheduleMonthlyCredits(newCredits: Int) {
         val userDocument = withContext(Dispatchers.IO) { getUserDocument() }
         if (userDocument != null) {
@@ -195,5 +314,16 @@ class FirestoreRepo {
             userDocument.update("daily_login_day", todayString).await()
             _dailyLoginDay.value = todayString
         }
+    }
+    private suspend fun updateUserActiveTimestamp() {
+        val userDocument = getUserDocument() ?: return
+        val serverTimestamp = FieldValue.serverTimestamp()
+        userDocument.update(mapOf("last_active" to serverTimestamp, "last_notification_check" to serverTimestamp)).await()
+    }
+
+    suspend fun onUserActivity(context: Context) {
+        updateUserActiveTimestamp()
+        // Re-schedule inactivity notification whenever the user is active.
+        NotificationScheduler.scheduleInactiveNotification(context)
     }
 }

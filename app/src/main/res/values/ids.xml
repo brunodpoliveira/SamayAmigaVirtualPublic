@@ -13,4 +13,5 @@
     <item name="itemPriceGPT4Offering" type="id" />
     <item name="itemDescriptionGPT4Offering" type="id" />
     <item name="firebaseId" type="id" />
+    <item name="clear_cache" type="id" />
 </resources>

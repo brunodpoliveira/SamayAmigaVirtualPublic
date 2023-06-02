@@ -21,7 +21,6 @@ import com.internaltest.sarahchatbotmvp.base.BaseActivity
 import com.internaltest.sarahchatbotmvp.auth.SignIn
 import com.internaltest.sarahchatbotmvp.ui.wallet.Wallet
 
-//TODO integrar modo escuro
 class ProfileActivity : BaseActivity() {
     private var logoutBtn: Button? = null
     private var goToChat: Button? = null

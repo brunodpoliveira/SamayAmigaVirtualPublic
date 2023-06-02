@@ -3,15 +3,14 @@
     <string name="digite_mensagem_aqui">Digite mensagem aqui</string>
     <string name="modo_escuro">Modo Escuro</string>
     <string name="sign_in_text">🥳 Olá! Boas Vindas ao app Samay!\n
-        📖 Por favor leia os nossos termos e avisos abaixo antes de usar o app!\n
-        ⚠ AVISOS: ESSE APP AINDA ESTÁ EM FASE DE TESTES.\n
-        🤖 As respostas são geradas por um algoritmo, não uma pessoa.\n
-        ⛔ Favor relatar quaisquer problemas para:teqbot.io59@gmail.com \n
-        🩺 Esse app não é substituto de um profissional de saúde mental, e foi feito somente para propósitos de entretenimento \n
-        🤬 Em raras ocasiões, as frases ditas pelo app podem ter cunho ofensivo,violento,
-        racista, homofóbico, etc. Estamos trabalhando duro para criar um ambiente
-        agrádavel e inclusivo para todos os nosso usuários. \n
-        ⬇ Acesse o app fazendo login com os botão abaixo.\n
+        💌 Conversas encantadoras e um(a) amigo(a) alimentado(a) por inteligência artificial estão a
+        apenas um login de distância.\n
+        🤗 Com nossa interface fácil de usar e um chatbot que te entende,
+        Samay é seu aplicativo ideal para encontrar entretenimento e conversas envolventes.\n
+        💫 Samay vai te ajudar a descascar o abacaxi da vida.\n
+        🌟 Faça login abaixo para liberar a magia, mas antes, dê uma olhada na nossa
+        Política de Privacidade e Termos de Uso.\n
+        ⛔ Se encontrar algum problema, por favor, relate para teqbot.io59@gmail.com.\n
     </string>
     <string name="name">Nome</string>
     <string name="email">Email</string>
@@ -33,4 +32,6 @@
     <string name="goToProfileActivity">Voltar</string>
     <string name="btnShop">Compre mais créditos aqui</string>
     <string name="deleteAccount">Deletar Conta e Info</string>
+    <string name="clear_cache">Resolver problemas do App</string>
+    <string name="fala_p_texto">Aperte o botão abaixo e fale</string>
 </resources>

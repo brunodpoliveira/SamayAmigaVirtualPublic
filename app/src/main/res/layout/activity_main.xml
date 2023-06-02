@@ -76,7 +76,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
-        app:rippleColor="@color/backgroundTintButtonColor" />
+        app:srcCompat="@android:drawable/ic_btn_speak_now" />
 
     <EditText
         android:id="@+id/editMessage"
@@ -98,20 +98,20 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <RelativeLayout
-        android:id="@+id/relativeLayout"
+        android:id="@+id/relativeLayoutToggleDark"
         android:layout_width="110dp"
         android:layout_height="40dp"
         app:layout_constraintBottom_toTopOf="@+id/editMessage"
         app:layout_constraintEnd_toStartOf="@+id/editMessage"
-        app:layout_constraintHorizontal_bias="0.228"
+        app:layout_constraintHorizontal_bias="0.2"
         app:layout_constraintStart_toEndOf="@+id/speak"
         app:layout_constraintTop_toTopOf="@+id/chatView"
-        app:layout_constraintVertical_bias="0.115">
+        app:layout_constraintVertical_bias="0.110000014">
 
         <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/btnToggleDark"
+            android:id="@+id/toggleDarkSwitch"
             android:layout_width="75dp"
-            android:layout_height="35dp"
+            android:layout_height="48dp"
             android:drawablePadding="20dp"
             android:thumb="@drawable/switch_thumb"
             android:track="@drawable/switch_track" />
@@ -133,6 +133,43 @@
             android:layout_centerVertical="true"
             android:layout_marginEnd="10dp"
             android:src="@drawable/moon_icon" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/relativeLayoutTextToSpeech"
+        android:layout_width="110dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="30dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnShop"
+        app:layout_constraintStart_toEndOf="@+id/relativeLayoutToggleDark">
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/textToSpeechSwitch"
+            android:layout_width="75dp"
+            android:layout_height="35dp"
+            android:checked="false"
+            android:drawablePadding="20dp"
+            android:thumb="@drawable/switch_thumb"
+            android:track="@drawable/switch_track" />
+
+        <ImageView
+            android:id="@+id/ic_outline_volume_up_24"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/baseline_volume_up_24" />
+
+        <ImageView
+            android:id="@+id/ic_outline_volume_off_24"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/baseline_volume_off_24" />
     </RelativeLayout>
 
     <TextView
@@ -215,13 +252,12 @@
         android:id="@+id/btnShop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="150dp"
+        android:layout_marginTop="30dp"
         android:backgroundTint="@color/teal_700"
         android:text="@string/btnShop"
         android:textColor="#000000"
         android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
+        app:layout_constraintStart_toStartOf="@+id/relativeLayoutToggleDark"
+        app:layout_constraintTop_toBottomOf="@+id/relativeLayoutToggleDark" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

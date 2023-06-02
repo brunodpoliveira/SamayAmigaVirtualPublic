@@ -1,6 +1,7 @@
 package com.internaltest.sarahchatbotmvp.auth
 
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -18,21 +19,25 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
+import com.internaltest.sarahchatbotmvp.BuildConfig
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.base.BaseActivity
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
+import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
 import com.qonversion.android.sdk.Qonversion
 import kotlinx.coroutines.launch
-import java.util.*
+import java.io.File
+import java.util.Objects
 
 class SignIn : BaseActivity() {
     private var signInButton: SignInButton? = null
+    private var clearCacheBtn: Button? = null
     private var privacyBtn: Button? = null
     private var termsOfUseBtn: Button? = null
     private var mSignInClient: GoogleSignInClient? = null
     private lateinit var auth: FirebaseAuth
     private lateinit var firestoreRepo: FirestoreRepo
+
     companion object {
         private const val RC_SIGN_IN = 1
         var isCurrentActivity = false
@@ -43,6 +48,7 @@ class SignIn : BaseActivity() {
         setContentView(R.layout.activity_sign_in)
         privacyBtn = findViewById(R.id.privacy)
         termsOfUseBtn = findViewById(R.id.terms_of_use)
+        clearCacheBtn = findViewById(R.id.clear_cache)
         auth = Firebase.auth
         firestoreRepo = FirestoreRepo()
         with(privacyBtn) {
@@ -51,9 +57,19 @@ class SignIn : BaseActivity() {
         with(termsOfUseBtn) {
             this?.setOnClickListener { gotoTermsOfUse() }
         }
+        with(clearCacheBtn) {
+            this?.setOnClickListener { clearCache() }
+            this?.setOnLongClickListener{
+                val tooltipText = "Apertando esse botão irá limpar o cache do app, " +
+                        "potencialmente resolvendo quaisquer problemas que você esteja enfrentando"
+                val duration = Toast.LENGTH_LONG
+                Toast.makeText(applicationContext, tooltipText, duration).show()
+                true
+            }
+        }
+
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(
-                "OAUTH_CLIENT_HERE")
+            .requestIdToken(BuildConfig.GOOGLE_SIGN_IN_REQUEST_ID_TOKEN)
             .requestEmail()
             .build()
         mSignInClient = GoogleSignIn.getClient(this, gso)
@@ -81,6 +97,37 @@ class SignIn : BaseActivity() {
                 data!!
             )
             Objects.requireNonNull(result)?.let { handleSignInResult(it) }
+        }
+    }
+
+    private fun clearCache() {
+        val result = clearCacheFunction(applicationContext)
+        if (result) {
+            Toast.makeText(applicationContext, "Cache limpo com sucesso", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(applicationContext, "Falha ao tentar limpar cache.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun clearCacheFunction(context: Context): Boolean {
+        return try {
+            val cacheDir = context.cacheDir
+            deleteFile(cacheDir)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    private fun deleteFile(file: File) {
+        if (file.isDirectory) {
+            val children = file.list()
+            for (child in children!!) {
+                deleteFile(File(file, child))
+            }
+        } else {
+            file.delete()
         }
     }
 
@@ -128,17 +175,15 @@ class SignIn : BaseActivity() {
                                 "Login cancelado/Erro durante Login initUserDocumentAsync",
                                 Toast.LENGTH_LONG).show()
                         } else {
+                            firestoreRepo.onUserActivity(applicationContext)
                             gotoChat()
                         }
                     }
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w(TAG, "signInWithCredential:failure", task.exception)
-                    Toast.makeText(
-                        applicationContext,
-                        "Login cancelado/Erro durante Login signInWithCredential",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(applicationContext, "Login cancelado/Erro durante Login",
+                        Toast.LENGTH_LONG).show()
                 }
             }
     }
@@ -151,14 +196,14 @@ class SignIn : BaseActivity() {
     private fun gotoPrivacy() {
         val browserIntent = Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("PRIVACY_LINK_HERE")
+            Uri.parse("https://teqbot.com.br/notificacao-de-privacidade/")
         )
         startActivity(browserIntent)
     }
 
     private fun gotoTermsOfUse() {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse("TERMS_OF_USE_LINK_HERE"))
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://teqbot.com.br/termos-de-servico/"))
         startActivity(browserIntent)
     }
 }
