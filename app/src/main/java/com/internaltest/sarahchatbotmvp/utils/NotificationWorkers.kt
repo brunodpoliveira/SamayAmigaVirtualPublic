@@ -8,8 +8,11 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
 import com.google.firebase.firestore.FieldValue
 import com.internaltest.sarahchatbotmvp.R
+import com.internaltest.sarahchatbotmvp.data.Constants
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
 import kotlinx.coroutines.tasks.await
@@ -20,7 +23,7 @@ private const val INACTIVE_NOTIFICATION_ID = 2
 private const val XMAS_NOTIFICATION_ID = 3
 private const val CHANNEL_ID = "app_notifications"
 
-private fun createNotificationChannel(context: Context) {
+fun createNotificationChannel(context: Context) {
     val name = "App Notifications"
     val descriptionText = "Notifications related to the app"
     val importance = NotificationManager.IMPORTANCE_DEFAULT
@@ -30,6 +33,16 @@ private fun createNotificationChannel(context: Context) {
 
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.createNotificationChannel(channel)
+
+    val firebaseName = "Firebase Notifications"
+    val firebaseDescriptionText = "Notifications from Firebase Cloud Messaging"
+    val firebaseImportance = NotificationManager.IMPORTANCE_HIGH
+    val firebaseChannel = NotificationChannel(Constants.FIREBASE_CHANNEL_ID, firebaseName,
+        firebaseImportance).apply {
+        description = firebaseDescriptionText
+    }
+
+    notificationManager.createNotificationChannel(firebaseChannel)
 }
 
 @SuppressLint("MissingPermission")
@@ -39,11 +52,12 @@ fun showDailyNotification(context: Context) {
     val intent = Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     }
-    val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    val pendingIntent = PendingIntent.getActivity(context, 0, intent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
     val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.mipmap.ic_launcher) // Replace with your own drawable
-        .setContentTitle("\uD83E\uDD29 Olá! É a Samay aqui")
+        .setContentTitle("\uD83E\uDD29 Olá! É a Samay aqui!")
         .setContentText("Vamos conversar um pouco!")
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setContentIntent(pendingIntent)
@@ -66,7 +80,7 @@ suspend fun showInactiveNotificationIfNeeded(context: Context) {
 
     // When the app was inactive for the specified duration
     if (lastActive != null && lastNotificationCheck != null &&
-        lastActive <= System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2)) {
+        lastActive <= System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)) {
 
         // Send the inactive notification
         createNotificationChannel(context)
@@ -78,7 +92,7 @@ suspend fun showInactiveNotificationIfNeeded(context: Context) {
             context,
             0,
             intent,
-            PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -98,6 +112,14 @@ suspend fun showInactiveNotificationIfNeeded(context: Context) {
     }
 }
 
+class InactiveNotificationWorker(context: Context, params: WorkerParameters):
+    CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        showInactiveNotificationIfNeeded(applicationContext)
+        return Result.success()
+    }
+}
+
 @SuppressLint("MissingPermission")
 fun showXmasNotification(context: Context) {
     createNotificationChannel(context)
@@ -105,7 +127,8 @@ fun showXmasNotification(context: Context) {
     val intent = Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     }
-    val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    val pendingIntent = PendingIntent.getActivity(context, 0, intent,
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
     val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.mipmap.ic_launcher) // Replace with your own drawable

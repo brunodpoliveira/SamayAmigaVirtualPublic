@@ -1,5 +1,5 @@
 package com.internaltest.sarahchatbotmvp.data
 
 object Constants {
-    const val USER_PREFERENCES = "userPrefs"
+    const val FIREBASE_CHANNEL_ID = "firebase_notifications"
 }

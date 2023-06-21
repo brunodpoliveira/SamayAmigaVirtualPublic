@@ -27,8 +27,8 @@ android {
         applicationId "com.internaltest.sarahchatbotmvp"
         minSdk 26
         targetSdk 33
-        versionCode 36
-        versionName "11"
+        versionCode 38
+        versionName "12"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -85,10 +85,10 @@ dependencies {
     //firebase
     implementation platform('com.google.firebase:firebase-bom:32.0.0')
     implementation 'com.google.firebase:firebase-analytics:21.3.0'
-    implementation 'com.google.firebase:firebase-perf:20.3.2'
+    implementation 'com.google.firebase:firebase-perf:20.3.3'
     implementation 'com.google.firebase:firebase-auth:22.0.0'
     implementation 'com.google.firebase:firebase-messaging:23.1.2'
-    implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.5'
+    implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.6'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
 

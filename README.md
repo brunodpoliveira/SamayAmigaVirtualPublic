@@ -1,6 +1,7 @@
 Samay Amiga Virtual: aplicativo para Android de chatbot de saúde mental
 =======================================================
 # O que eu preciso?
+
 * Uma [conta de desenvolvedor do Google Play](https://developer.android.com/distribute/console/) 
 para publicar o aplicativo e gerenciar assinaturas
 
@@ -125,13 +126,22 @@ Este aplicativo usa Firebase (Performance, Crashlytics, Analytics, Auth, Firesto
    * Escolha a opção "Iniciar no modo de teste" e selecione a região mais próxima de você.
    * Defina as regras de segurança para o seu banco de dados e clique em "Concluir".
 
-7. Verifique a configuração
+7. Configure o Firestore Cloud Messaging
+   * Acesse o [Firebase Console](https://console.firebase.google.com/) e navegue até seu projeto. 
+   * No menu à esquerda, selecione "Cloud Messaging". 
+   * Na seção Cloud Messaging, clique no botão "Enviar sua primeira mensagem". Como alternativa, se você já enviou outras mensagens, clique no botão "Enviar uma mensagem" no canto superior direito. 
+   * Para "Título da mensagem" e "Texto da mensagem", forneça o título e a mensagem desejados, respectivamente. 
+   * Na seção "Destino", selecione "Dispositivo único" e cole o token FCM (gerado quando o usuário entra na tela principal - checar os logs) no campo "Token de registro FCM". 
+   * Clique em "Avançar" e "Revisar" e, em seguida, clique em "Publicar". 
+   * Observe se o dispositivo de teste recebe a notificação push.
+
+8. Verifique a configuração
 
    * Crie e execute seu aplicativo Android em um emulador ou dispositivo físico.
    * Execute algumas ações no aplicativo para gerar alguns dados.
    * Acesse o Console do Firebase e verifique se os dados estão sendo recebidos pelo Firebase.
 
-8. Configure o Firebase Cloud Functions
+9. Configure o Firebase Cloud Functions
 
    1. Se ainda não o fez, instale o Firebase CLI seguindo as instruções aqui:
       https://firebase.google.com/docs/cli#install_the_firebase_cli

@@ -2,7 +2,6 @@ package com.internaltest.sarahchatbotmvp.ui.main
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,18 +16,21 @@ import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.navigation.NavigationView
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.play.core.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.internaltest.sarahchatbotmvp.BuildConfig
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.base.BaseActivity
@@ -54,38 +56,32 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
-//TODO adicionar menu dropdown
 //TODO msgs são apagadas quando o usuário sai da tela. Restaurar a conversa e adicionar opção para
 //apagar/reiniciar a conversa
 @SuppressLint("NotifyDataSetChanged")
 class MainActivity : BaseActivity() {
-
     private lateinit var firestoreRepo: FirestoreRepo
     private lateinit var billingManager: BillingManager
     private lateinit var wallet: Wallet
     private lateinit var textToSpeech: TextToSpeech
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var configProfile: FloatingActionButton
 
+    private var progressDialogFragment: ProgressDialogFragment? = null
     private var thisSessionMsgCounter = 0
     private var chatView: RecyclerView? = null
     private var chatAdapter: ChatAdapter? = null
     private var messageList: MutableList<Message> = ArrayList()
     private var editMessage: EditText? = null
     private var btnSend: ImageButton? = null
-    private var configProfile: FloatingActionButton? = null
-    private var progressDialog: ProgressDialog? = null
-    private var toggleDarkSwitch: SwitchCompat? = null
-    private var textToSpeechSwitch: SwitchCompat? = null
-    private var btnShop: Button? = null
     private var subscriptionHeadTextView: TextView? = null
     private var creditsHeadTextView: TextView? = null
     private var subscriptionTextView: TextView? = null
     private var creditsTextView: TextView? = null
     private var userId: String? = null
     private var pressedTime: Long = 0
-    private var isDarkModeOn: Boolean? = null
     private var isRewardPopupShown = false
     private var isDailyLoginRewardRunning = false
-    private var isTextToSpeechOn: Boolean? = null
     private var textToSpeechInitialized = false
     private var speak: FloatingActionButton? = null
     private val REQUEST_CODE_SPEECH_INPUT = 1
@@ -94,23 +90,8 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        firestoreRepo = FirestoreRepo()
-        CoroutineScope(Dispatchers.Main).launch {
-            isDarkModeOn = firestoreRepo.darkMode.first()
-            toggleDarkSwitch?.isChecked = isDarkModeOn as Boolean
-            AppCompatDelegate.setDefaultNightMode(
-                if (isDarkModeOn as Boolean) {
-                    AppCompatDelegate.MODE_NIGHT_YES
-                } else {
-                    AppCompatDelegate.MODE_NIGHT_NO
-                }
-            )
-        }
-        CoroutineScope(Dispatchers.Main).launch {
-            isTextToSpeechOn = firestoreRepo.textToSpeech.first()
-            textToSpeechSwitch?.isChecked = isTextToSpeechOn as Boolean
-        }
         setContentView(R.layout.activity_main)
+        firestoreRepo = FirestoreRepo()
         loadFireStoreInfo()
         billingManager = FirestoreRepo().getUserId()?.let { BillingManager(this, it) }!!
         editMessage = findViewById(R.id.editMessage)
@@ -118,11 +99,29 @@ class MainActivity : BaseActivity() {
         chatAdapter = ChatAdapter(messageList, this)
         chatView = findViewById(R.id.chatView)
         with(chatView) { this?.setAdapter(chatAdapter) }
-        toggleDarkSwitch = findViewById(R.id.toggleDarkSwitch)
-        btnShop = findViewById(R.id.btnShop)
-        with(btnShop) { this?.setOnClickListener { gotoShop() } }
+
+        val navigationView: NavigationView = findViewById(R.id.navigation_view)
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_profile -> {
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                else -> false
+            }
+        }
+
+        drawerLayout = findViewById(R.id.drawer_layout)
         configProfile = findViewById(R.id.config)
-        with(configProfile) { this?.setOnClickListener { gotoProfile() } }
+        configProfile.setOnClickListener {
+            // Open the drawer
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+
+        // Show the ProfileFragment inside the navigation drawer
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.profile_fragment_container, ProfileFragment())
+            .commit()
         val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(this)!!
         userId = googleSignInAccount.id
         creditsHeadTextView = findViewById(R.id.creditsHead)
@@ -130,11 +129,13 @@ class MainActivity : BaseActivity() {
         creditsTextView = findViewById(R.id.creditsCount)
         subscriptionTextView = findViewById(R.id.subscriptionStatus)
         speak = findViewById(R.id.speak)!!
-        textToSpeechSwitch = findViewById<SwitchCompat>(R.id.textToSpeechSwitch).apply {
-            setOnCheckedChangeListener { _, isChecked ->
-                // Save the preference to Firestore when the switch is toggled
-                CoroutineScope(Dispatchers.Main).launch {
-                    firestoreRepo.setTextToSpeech(isChecked)
+
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status != TextToSpeech.ERROR) {
+                textToSpeech.language = Locale("pt", "BR")
+                textToSpeechInitialized = true
+                if (messageList.isNotEmpty()) {
+                    messageList.firstOrNull()?.let { speakText(it.message).toString() }
                 }
             }
         }
@@ -186,17 +187,6 @@ class MainActivity : BaseActivity() {
                         Toast.LENGTH_LONG).show()
             }
         }
-        textToSpeech = TextToSpeech(this) { status ->
-            if (status != TextToSpeech.ERROR) {
-                textToSpeech.language = Locale("pt", "BR")
-                textToSpeechInitialized = true
-                if (messageList.isNotEmpty() && textToSpeechSwitch!!.isChecked) {
-                    // Speak the initial message if Text-to-Speech is enabled
-                    messageList.firstOrNull()?.let { speakText(it.message).toString() }
-                    messageList.firstOrNull()?.let { Log.i("addAndSpeakInitialMessage", it.message) }
-                }
-            }
-        }
         wallet = Wallet()
         wallet.checkAndSwitchEntitlements()
         dailyLoginReward()
@@ -205,57 +195,16 @@ class MainActivity : BaseActivity() {
         NotificationScheduler.scheduleInactiveNotification(this)
         NotificationScheduler.scheduleXmasNotification(this)
 
-        //implementando lógica do botão modo escuro
-        toggleDarkSwitch?.setOnClickListener {
-            val isChecked = toggleDarkSwitch?.isChecked ?: false
-            toggleDarkSwitch!!.isChecked = !isChecked // Revert the switch state temporarily
-            val alertDialogBuilder = AlertDialog.Builder(this)
-            alertDialogBuilder.setMessage(
-                "Tem certeza? Todo o histórico de conversa será apagado ao trocar tema"
-            )
-            // Set the positive button with the default text color
-            alertDialogBuilder.setPositiveButton("Sim", null)
-            // Set the negative button with the default text color
-            alertDialogBuilder.setNegativeButton("Não", null)
-
-            val alertDialog = alertDialogBuilder.create()
-            alertDialog.setOnShowListener {
-                // Get the current theme
-                val currentTheme = AppCompatDelegate.getDefaultNightMode()
-
-                // Set the text color for the positive and negative buttons based on the current theme
-                val buttonTextColor =
-                    if (currentTheme == AppCompatDelegate.MODE_NIGHT_YES) {
-                        Color.WHITE
-                    } else {
-                        Color.BLACK
-                    }
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-                    .setTextColor(buttonTextColor)
-                alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE)
-                    .setTextColor(buttonTextColor)
-
-                // Set the click listeners for the buttons after setting the text color
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
-                    // Toggle the dark mode value and update it in Firestore
-
-                    val newDarkModeValue = !(isDarkModeOn ?: false)
-                    isDarkModeOn = newDarkModeValue
-                    CoroutineScope(Dispatchers.Main).launch {
-                        firestoreRepo.setDarkMode(newDarkModeValue)
-                        Log.i("new dark mode value", newDarkModeValue.toString())
-                    }
-                    alertDialog.dismiss() // Close the dialog after handling the click
-
-                    applyDarkMode(isDarkModeOn) // Apply the new theme
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val newToken = task.result
+                Log.d("Firebase FCM Token", "Generated FCM Token: $newToken")
+                CoroutineScope(Dispatchers.IO).launch {
+                    firestoreRepo.saveFcmToken(newToken)
                 }
-
-                alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
-                    alertDialog.dismiss() // Close the dialog after handling the click
-                    toggleDarkSwitch!!.isChecked = !isChecked // Revert the switch state
-                }
+            } else {
+                Log.e("Firebase FCM Token", "Failed to generate FCM Token", task.exception)
             }
-            alertDialog.show()
         }
 
         btnSend?.setOnClickListener {
@@ -265,12 +214,7 @@ class MainActivity : BaseActivity() {
                 with(editMessage) { this?.setText("") }
                 checkSubscriptionAndCreditsAndStartMessageLoop(message)
                 //mensagem de carregamento, que aparecerá qndo o user mandar msg
-                progressDialog = ProgressDialog(this@MainActivity)
-                progressDialog!!.setTitle("Carregando mensagem")
-                progressDialog!!.setMessage("Aguarde...")
-                progressDialog!!.setProgressStyle(ProgressDialog.STYLE_SPINNER)
-                progressDialog!!.show()
-                progressDialog!!.setCancelable(false)
+                showProgressDialog("Carregando Mensagem...")
                 Objects.requireNonNull(with(chatView) { this?.adapter })
                     .notifyDataSetChanged()
                 Objects.requireNonNull(with(chatView) { this?.layoutManager })
@@ -282,14 +226,16 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun applyDarkMode(isDarkModeOn: Boolean?) {
-        if (isDarkModeOn == true) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
-        toggleDarkSwitch!!.isChecked = isDarkModeOn ?: false
+    private fun showProgressDialog(message: String) {
+        progressDialogFragment = ProgressDialogFragment.newInstance(message)
+        progressDialogFragment?.show(supportFragmentManager, "progressDialog")
     }
+
+    private fun dismissProgressDialog() {
+        progressDialogFragment?.dismissAllowingStateLoss()
+        progressDialogFragment = null
+    }
+
 
     private fun addAndSpeakInitialMessage() {
         Objects.requireNonNull(with(chatView) { this?.layoutManager })
@@ -310,19 +256,26 @@ class MainActivity : BaseActivity() {
 
     private fun loadFireStoreInfo() {
         // Observe dark mode changes
-        firestoreRepo.darkMode.asLiveData().observe(this) {
-            isDarkModeOn = it
-            toggleDarkSwitch?.isChecked = it
-            Log.i("is dark mode on (load data store)", isDarkModeOn.toString())
+        firestoreRepo.darkMode.asLiveData().observe(this) { darkMode ->
+            if (darkMode) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
             if (messageList.isEmpty()) {
                 addAndSpeakInitialMessage()
             }
         }
 
-        firestoreRepo.textToSpeech.asLiveData().observe(this) {
-            isTextToSpeechOn = it
-            textToSpeechSwitch?.isChecked = it
-            Log.i("textToSpeech (load data store)", isTextToSpeechOn.toString())
+        firestoreRepo.textToSpeech.asLiveData().observe(this) { textToSpeechEnabled ->
+            if (textToSpeechEnabled && messageList.isNotEmpty()) {
+                // Speak the initial message
+                messageList.firstOrNull()?.let { speakText(it.message).toString() }
+                messageList.firstOrNull()?.let { Log.i("addAndSpeakInitialMessage", it.message) }
+            } else {
+                // Stop Text-to-Speech playback when it's disabled
+                textToSpeech.stop()
+            }
         }
 
         // Observe credits changes
@@ -415,7 +368,7 @@ class MainActivity : BaseActivity() {
 
             CoroutineScope(Dispatchers.Main).launch {
                 firestoreRepo.credits.first().let { currentCredits ->
-                    firestoreRepo.setCredits(currentCredits + 10)
+                    firestoreRepo.setCredits(currentCredits + 15)
                     firestoreRepo.setDailyLoginDay(todaystring) // Update last_login_date
                     val updatedCredits = firestoreRepo.credits.first()
                     with(creditsTextView) { this?.setText(updatedCredits.toString()) }
@@ -456,8 +409,10 @@ class MainActivity : BaseActivity() {
     }
 
     private fun speakText(text: String) {
-        if (textToSpeechSwitch?.isChecked == true && textToSpeechInitialized) {
-            textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_id")
+        firestoreRepo.textToSpeech.asLiveData().observe(this) { textToSpeechEnabled ->
+            if (textToSpeechInitialized && textToSpeechEnabled) {
+                textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_id")
+            }
         }
     }
 
@@ -553,7 +508,7 @@ class MainActivity : BaseActivity() {
                         firestoreRepo.onUserActivity(applicationContext)
                     } else {
                         runOnUiThread {
-                            progressDialog!!.dismiss()
+                            dismissProgressDialog()
                             CoroutineScope(Dispatchers.IO).launch {
                                 firestoreRepo.setCredits(0)
                                 firestoreRepo.onUserActivity(applicationContext)
@@ -621,7 +576,7 @@ class MainActivity : BaseActivity() {
     private fun handleTimeoutError(elapsedTime: Long, timeout: Int): Boolean {
         if (elapsedTime > timeout * 1000) {
             runOnUiThread {
-                progressDialog!!.dismiss()
+                dismissProgressDialog()
                 CoroutineScope(Dispatchers.Main).launch {
                     firestoreRepo.credits.first().let { currentCredits ->
                         firestoreRepo.setCredits(currentCredits + 1)
@@ -695,7 +650,7 @@ class MainActivity : BaseActivity() {
                     } catch (e: OpenAiHttpException) {
                         e.printStackTrace()
                         runOnUiThread {
-                            progressDialog!!.dismiss()
+                            dismissProgressDialog()
                             CoroutineScope(Dispatchers.Main).launch {
                                 firestoreRepo.credits.first().let { currentCredits ->
                                     firestoreRepo.setCredits(currentCredits + 1)
@@ -742,7 +697,7 @@ class MainActivity : BaseActivity() {
 
                     if (choices.isNotEmpty()) {
                         runOnUiThread {
-                            progressDialog!!.dismiss()
+                            dismissProgressDialog()
                             messageList.add(Message(choices[0].content.toString().trim(), true))
                             speakText(choices[0].content.toString().trim())
                             Log.i("speakText", messageList[0].toString())
@@ -766,7 +721,7 @@ class MainActivity : BaseActivity() {
                 } catch (e: OpenAiHttpException) {
                     e.printStackTrace()
                     runOnUiThread {
-                        progressDialog!!.dismiss()
+                        dismissProgressDialog()
                         CoroutineScope(Dispatchers.Main).launch {
                             firestoreRepo.credits.first().let { currentCredits ->
                                 firestoreRepo.setCredits(currentCredits + 1)
@@ -782,7 +737,7 @@ class MainActivity : BaseActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    progressDialog!!.dismiss()
+                    dismissProgressDialog()
                     // Show error message to the client
                     Toast.makeText(this@MainActivity,
                         "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -790,11 +745,6 @@ class MainActivity : BaseActivity() {
             }
         }
         thread.start()
-    }
-
-    private fun gotoProfile() {
-        val intent = Intent(this@MainActivity, ProfileActivity::class.java)
-        startActivity(intent)
     }
 
     private fun gotoShop() {

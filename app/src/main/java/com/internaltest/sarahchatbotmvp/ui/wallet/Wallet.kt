@@ -12,10 +12,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.asLiveData
-import com.internaltest.sarahchatbotmvp.ui.main.ProfileActivity
+import com.internaltest.sarahchatbotmvp.ui.main.ProfileFragment
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.base.BaseActivity
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
+import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
 import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.dto.QEntitlement
 import com.qonversion.android.sdk.dto.QEntitlementRenewState
@@ -81,12 +82,12 @@ class Wallet : BaseActivity(){
         subscriptionHeadTextView = findViewById(R.id.subscriptionHead)
         btnReturn = findViewById(R.id.goToProfileActivity)
         checkAndCancelOfferingButton = findViewById(R.id.itemCancel)
-        with(btnReturn) { this?.setOnClickListener { gotoProfile() } }
+        with(btnReturn) { this?.setOnClickListener { gotoMainActivity() } }
         with(checkAndCancelOfferingButton) { this?.setOnClickListener { openPlaystoreAccount() } }
         uiOfferings()
     }
-    private fun gotoProfile() {
-        val intent = Intent(this@Wallet, ProfileActivity::class.java)
+    private fun gotoMainActivity() {
+        val intent = Intent(this@Wallet, MainActivity::class.java)
         startActivity(intent)
     }
 
@@ -278,7 +279,7 @@ class Wallet : BaseActivity(){
                             firestoreRepo.subscriptionStatus.collect { subscription ->
                                 with(subscriptionTextView) { this?.setText(subscription) }
                                 Log.i("subscription (checkEntitlements lite)", subscription)
-                                firestoreRepo.scheduleMonthlyCredits(300)
+                                firestoreRepo.scheduleMonthlyCredits(500)
                             }
                         }
                     }
@@ -448,7 +449,7 @@ class Wallet : BaseActivity(){
                 if (qProduct.storeID == "buy_credits"
                     || qProduct.qonversionID == "buy_credits")
                 {
-                    addCredits(50)
+                    addCredits(75)
                 }
             }
             override fun onError(error: QonversionError) {
