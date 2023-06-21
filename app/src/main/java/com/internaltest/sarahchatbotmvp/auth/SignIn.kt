@@ -196,14 +196,14 @@ class SignIn : BaseActivity() {
     private fun gotoPrivacy() {
         val browserIntent = Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("https://teqbot.com.br/notificacao-de-privacidade/")
+            Uri.parse("PRIVACY_LINK_HERE")
         )
         startActivity(browserIntent)
     }
 
     private fun gotoTermsOfUse() {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse("https://teqbot.com.br/termos-de-servico/"))
+            Intent(Intent.ACTION_VIEW, Uri.parse("TERMS_OF_USE_LINK_HERE"))
         startActivity(browserIntent)
     }
 }
