@@ -1,6 +1,7 @@
 package com.internaltest.sarahchatbotmvp.ui.adapters
 
 import android.app.Activity
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,11 +10,18 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.internaltest.sarahchatbotmvp.R
-import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter.MyViewHolder
 import com.internaltest.sarahchatbotmvp.models.Message
+import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter.MyViewHolder
 
-class ChatAdapter(private val messageList: List<Message>, private val activity: Activity) :
-    RecyclerView.Adapter<MyViewHolder>() {
+class ChatAdapter(private val messageList: List<Message>, private val activity: Activity) : RecyclerView.Adapter<MyViewHolder>() {
+
+    var currentUserFontSize: Int = 20
+
+    fun updateFontSize(fontSize: Int) {
+        currentUserFontSize = fontSize
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view =
             LayoutInflater.from(activity).inflate(R.layout.adapter_message_one, parent, false)
@@ -24,10 +32,6 @@ class ChatAdapter(private val messageList: List<Message>, private val activity: 
         val message = messageList[position].message
         val isReceived = messageList[position].isReceived
 
-        //arrastar
-        holder.messageReceive.setTextIsSelectable(false)
-        holder.messageReceive.measure(-1, -1)
-        holder.messageReceive.setTextIsSelectable(true)
         if (isReceived) {
             holder.messageReceive.visibility = View.VISIBLE
             holder.messageSend.visibility = View.GONE
@@ -35,13 +39,18 @@ class ChatAdapter(private val messageList: List<Message>, private val activity: 
             holder.imageReceiveScroll.visibility = View.GONE
             holder.messageReceive.text = message
             holder.messageReceive.isClickable = true
+            holder.messageReceive.textSize = currentUserFontSize.toFloat()
+            holder.messageSend.textSize = currentUserFontSize.toFloat()
         } else {
             holder.messageSend.visibility = View.VISIBLE
             holder.messageReceive.visibility = View.GONE
             holder.imageReceive.visibility = View.GONE
             holder.imageReceiveScroll.visibility = View.GONE
             holder.messageSend.text = message
+            holder.messageReceive.textSize = currentUserFontSize.toFloat()
+            holder.messageSend.textSize = currentUserFontSize.toFloat()
         }
+        Log.d("ChatAdapter", "Updated font size: $currentUserFontSize")
     }
 
     override fun getItemCount(): Int {

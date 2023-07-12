@@ -80,7 +80,7 @@ suspend fun showInactiveNotificationIfNeeded(context: Context) {
 
     // When the app was inactive for the specified duration
     if (lastActive != null && lastNotificationCheck != null &&
-        lastActive <= System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)) {
+        lastActive <= System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2)) {
 
         // Send the inactive notification
         createNotificationChannel(context)

@@ -27,8 +27,8 @@ android {
         applicationId "com.internaltest.sarahchatbotmvp"
         minSdk 26
         targetSdk 33
-        versionCode 38
-        versionName "12"
+        versionCode 41
+        versionName "13"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -78,8 +78,8 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
     implementation 'com.google.android.play:core:1.10.3'
-    implementation 'com.theokanning.openai-gpt3-java:api:0.12.0'
-    implementation 'com.theokanning.openai-gpt3-java:service:0.12.0'
+    implementation 'com.theokanning.openai-gpt3-java:api:0.14.0'
+    implementation 'com.theokanning.openai-gpt3-java:service:0.14.0'
     implementation 'com.google.android.play:integrity:1.1.0'
 
     //firebase
@@ -92,14 +92,14 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-auth-ktx'
 
-    implementation 'com.google.android.gms:play-services-auth:20.5.0'
+    implementation 'com.google.android.gms:play-services-auth:20.6.0'
     implementation 'com.github.bumptech.glide:glide:4.15.1'
-    implementation 'io.qonversion.android.sdk:sdk:4.4.0'
+    implementation 'io.qonversion.android.sdk:sdk:5.0.0'
     implementation 'androidx.activity:activity-compose:1.7.2'
     implementation "androidx.core:core-ktx:1.10.1"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.datastore:datastore-preferences:1.0.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
 
     //notification
     implementation "androidx.work:work-runtime-ktx:2.8.1"

@@ -34,4 +34,13 @@
     <string name="deleteAccount">Deletar Conta e Info</string>
     <string name="clear_cache">Resolver problemas do App</string>
     <string name="fala_p_texto">Aperte o botão abaixo e fale</string>
+    <string name="id_google_sub">Id Google</string>
+    <string name="id_firebase_sub">Id Firebase</string>
+    <string name="tts_sub_text">Ler Mensagens Em Voz Alta</string>
+    <string name="dmode_sub_text">Modo Escuro</string>
+    <string name="font_size_sub_text">Tamanho da Fonte</string>
+    <string name="min_value_txt">10</string>
+    <string name="max_value_txt">40</string>
+    <string name="save_convo_txt">Salvar Conversa</string>
+    <string name="load_convo_txt">Carregar Conversa</string>
 </resources>

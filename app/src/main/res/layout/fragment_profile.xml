@@ -12,53 +12,67 @@
 
         <ImageView
             android:id="@+id/profileImage"
-            android:layout_width="60dp"
-            android:layout_height="60dp" />
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
 
         <TextView
             android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:text="@string/name"
-            android:textSize="14sp" />
+            android:textSize="15sp" />
 
         <TextView
             android:id="@+id/email"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="5dp"
             android:text="@string/email"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/userIdSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="@string/id_google_sub"
             android:textSize="14sp" />
 
         <TextView
             android:id="@+id/userId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:text="@string/id"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/FirebaseIdSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/id_firebase_sub"
             android:textSize="14sp" />
 
         <TextView
             android:id="@+id/firebaseId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:text="@string/id"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/ttsSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ler Mensagens Em Voz Alta"
-            android:textSize="15sp" />
+            android:text="@string/tts_sub_text"
+            android:layout_marginTop="5dp"
+            android:textSize="14sp" />
 
         <RelativeLayout
             android:id="@+id/relativeLayoutTextToSpeech"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
             app:layout_constraintStart_toEndOf="@+id/relativeLayoutToggleDark">
 
             <androidx.appcompat.widget.SwitchCompat
@@ -94,8 +108,8 @@
             android:id="@+id/dmodeSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Modo Escuro"
-            android:textSize="15sp" />
+            android:text="@string/dmode_sub_text"
+            android:textSize="14sp" />
 
         <RelativeLayout
             android:id="@+id/relativeLayoutToggleDark"
@@ -131,6 +145,54 @@
                 android:src="@drawable/moon_icon" />
         </RelativeLayout>
 
+        <RelativeLayout
+            android:id="@+id/relativeLayoutFontSize"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintHorizontal_bias="0.2"
+            app:layout_constraintVertical_bias="0.11">
+
+            <TextView
+                android:id="@+id/fontSizeSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/font_size_sub_text"
+                android:textSize="14sp"
+                android:layout_centerInParent="true"/>
+
+            <SeekBar
+                android:id="@+id/fontSizeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:max="30"
+                android:progress="0" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/minValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="start"
+                android:text="@string/min_value_txt"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/maxValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="@string/max_value_txt"
+                android:textSize="15sp" />
+        </LinearLayout>
+
         <Button
             android:id="@+id/walletBtn"
             android:layout_width="wrap_content"
@@ -139,12 +201,26 @@
             android:text="@string/goToWallet"
             android:textColor="#000000"
             android:textSize="12sp" />
+        <Button
+            android:id="@+id/saveConversationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save_convo_txt"
+            android:textColor="#000000"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/loadConversationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/load_convo_txt"
+            android:textColor="#000000"
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/logoutBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:text="@string/logout"
             android:textColor="#000000"
             android:textSize="12sp" />
@@ -153,7 +229,6 @@
             android:id="@+id/deleteAccountBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:text="@string/deleteAccount"
             android:textColor="#000000"
             android:textSize="12sp" />

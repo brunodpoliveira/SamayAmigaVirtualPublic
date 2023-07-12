@@ -1,7 +1,6 @@
 package com.internaltest.sarahchatbotmvp.ui.main
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,8 +11,13 @@ import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
-import android.widget.*
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
@@ -40,25 +44,29 @@ import com.internaltest.sarahchatbotmvp.models.Message
 import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter
 import com.internaltest.sarahchatbotmvp.ui.wallet.Wallet
 import com.internaltest.sarahchatbotmvp.utils.NotificationScheduler
-import com.theokanning.openai.OpenAiApi
 import com.theokanning.openai.OpenAiHttpException
+import com.theokanning.openai.client.OpenAiApi
 import com.theokanning.openai.completion.chat.ChatCompletionChoice
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
 import com.theokanning.openai.service.OpenAiService.buildApi
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.Duration
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
+import java.util.Objects
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 
 //TODO msgs são apagadas quando o usuário sai da tela. Restaurar a conversa e adicionar opção para
 //apagar/reiniciar a conversa
-@SuppressLint("NotifyDataSetChanged")
 class MainActivity : BaseActivity() {
     private lateinit var firestoreRepo: FirestoreRepo
     private lateinit var billingManager: BillingManager
@@ -69,14 +77,14 @@ class MainActivity : BaseActivity() {
 
     private var progressDialogFragment: ProgressDialogFragment? = null
     private var thisSessionMsgCounter = 0
-    private var chatView: RecyclerView? = null
-    private var chatAdapter: ChatAdapter? = null
-    private var messageList: MutableList<Message> = ArrayList()
+    var chatView: RecyclerView? = null
+    var chatAdapter: ChatAdapter? = null
+    var messageList: MutableList<Message> = ArrayList()
     private var editMessage: EditText? = null
     private var btnSend: ImageButton? = null
     private var subscriptionHeadTextView: TextView? = null
     private var creditsHeadTextView: TextView? = null
-    private var subscriptionTextView: TextView? = null
+    var subscriptionTextView: TextView? = null
     private var creditsTextView: TextView? = null
     private var userId: String? = null
     private var pressedTime: Long = 0
@@ -85,6 +93,7 @@ class MainActivity : BaseActivity() {
     private var textToSpeechInitialized = false
     private var speak: FloatingActionButton? = null
     private val REQUEST_CODE_SPEECH_INPUT = 1
+    private var fontSizeJob: Job? = null
 
     private val msgs: MutableList<ChatMessage> = ArrayList()
 
@@ -94,11 +103,36 @@ class MainActivity : BaseActivity() {
         firestoreRepo = FirestoreRepo()
         loadFireStoreInfo()
         billingManager = FirestoreRepo().getUserId()?.let { BillingManager(this, it) }!!
-        editMessage = findViewById(R.id.editMessage)
+
         btnSend = findViewById(R.id.btnSend)
         chatAdapter = ChatAdapter(messageList, this)
         chatView = findViewById(R.id.chatView)
         with(chatView) { this?.setAdapter(chatAdapter) }
+        observeFontSize()
+
+        editMessage = findViewById(R.id.editMessage)
+
+        //Making sure the text expands as the user types more text
+        editMessage?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val textLength = s?.length ?: 0
+
+                val initialFontSize = chatAdapter?.currentUserFontSize?.toFloat() ?: 20f
+                val newFontSize: Float = when {
+                    textLength <= 20 -> initialFontSize // Use the font size set by the SeekBar
+                    textLength in 21..50 -> (initialFontSize.times(0.8)).coerceAtLeast(12.0)
+                        .toFloat()
+                    textLength in 51..100 -> (initialFontSize.times(0.6)).coerceAtLeast(12.0)
+                        .toFloat()
+                    else -> 12f // Use a smaller font size for long texts
+                }
+                editMessage?.textSize = newFontSize
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         val navigationView: NavigationView = findViewById(R.id.navigation_view)
         navigationView.setNavigationItemSelectedListener { menuItem ->
@@ -210,7 +244,6 @@ class MainActivity : BaseActivity() {
         btnSend?.setOnClickListener {
             val message = editMessage?.text.toString()
             if (message.isNotEmpty()) {
-                messageList.add(Message(message, false))
                 with(editMessage) { this?.setText("") }
                 checkSubscriptionAndCreditsAndStartMessageLoop(message)
                 //mensagem de carregamento, que aparecerá qndo o user mandar msg
@@ -226,16 +259,24 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun showProgressDialog(message: String) {
+    private fun observeFontSize() {
+        fontSizeJob?.cancel()
+        fontSizeJob = CoroutineScope(Dispatchers.Main).launch {
+            firestoreRepo.fetchFontSize().collect { newSize ->
+                chatAdapter?.updateFontSize(newSize)
+            }
+        }
+    }
+
+    fun showProgressDialog(message: String) {
         progressDialogFragment = ProgressDialogFragment.newInstance(message)
         progressDialogFragment?.show(supportFragmentManager, "progressDialog")
     }
 
-    private fun dismissProgressDialog() {
+    fun dismissProgressDialog() {
         progressDialogFragment?.dismissAllowingStateLoss()
         progressDialogFragment = null
     }
-
 
     private fun addAndSpeakInitialMessage() {
         Objects.requireNonNull(with(chatView) { this?.layoutManager })
@@ -290,6 +331,9 @@ class MainActivity : BaseActivity() {
             with(subscriptionTextView) { this?.text = subscription }
             Log.i("subscription (load data store)", subscription)
         }
+        // Observe the changes in fontSize
+        firestoreRepo._fontSize.asLiveData().observe(this)
+        {chatAdapter?.updateFontSize(it) }
 
         lifecycleScope.launch {
             firestoreRepo.fetchData()
@@ -526,7 +570,8 @@ class MainActivity : BaseActivity() {
             .setTitle("Você está sem créditos")
             .setMessage("Compre mais ou aguarde 24hrs para ter mais")
             .setPositiveButton("Comprar créditos") { _, _ ->
-                gotoShop()
+                displayBuyCreditsBuyout()
+
             }
             .setNegativeButton("OK") { dialog, _ ->
                 dialog.dismiss()
@@ -545,6 +590,13 @@ class MainActivity : BaseActivity() {
         }
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
         alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
+    }
+
+    private fun displayBuyCreditsBuyout() {
+        val intent = Intent(this, Wallet::class.java).apply {
+            putExtra("SHOW_BUY_CREDITS", true)
+        }
+        startActivity(intent)
     }
 
     private fun feedbackPopup() {
@@ -603,7 +655,7 @@ class MainActivity : BaseActivity() {
                 val model: String = if (subscriptionTextView?.text == "GPT4") {
                     "gpt-4"
                 } else {
-                    "gpt-3.5-turbo"
+                    "gpt-3.5-turbo-16k"
                 }
                 // Add the initial assistant message with the prompt
                 val initialPrompt = "Você é uma amiga virtual chamada Samay. " +
@@ -627,10 +679,14 @@ class MainActivity : BaseActivity() {
                         .presencePenalty(.8)
                         .user(userId)
                         .build()
-                    Log.i("\ninitialChatCompletionRequest:", initialChatCompletionRequest.toString())
+                    Log.i(
+                        "\ninitialChatCompletionRequest:",
+                        initialChatCompletionRequest.toString()
+                    )
                     try {
                         val startTime = System.currentTimeMillis()
-                        val initialHttpResponse = service.createChatCompletion(initialChatCompletionRequest)
+                        val initialHttpResponse =
+                            service.createChatCompletion(initialChatCompletionRequest)
                         val elapsedTime = System.currentTimeMillis() - startTime
                         Log.i("\ninitialHttpResponse:", initialHttpResponse.toString())
 
@@ -639,12 +695,15 @@ class MainActivity : BaseActivity() {
                         }
 
                         val initialChoices = initialHttpResponse.choices.stream()
-                            .map { obj: ChatCompletionChoice -> obj.message }.collect(Collectors.toList())
+                            .map { obj: ChatCompletionChoice -> obj.message }
+                            .collect(Collectors.toList())
                         thisSessionMsgCounter += 1
 
                         println(initialChoices[0].content.toString())
-                        Log.i("\nOpenAi initialChatCompletionRequest:",
-                            initialChatCompletionRequest.toString())
+                        Log.i(
+                            "\nOpenAi initialChatCompletionRequest:",
+                            initialChatCompletionRequest.toString()
+                        )
                         Log.i("\nOpenAi Initial Output:", initialChoices.toString())
                         Log.i("\nOpenAi msgs:", msgs.toString())
                     } catch (e: OpenAiHttpException) {
@@ -656,16 +715,19 @@ class MainActivity : BaseActivity() {
                                     firestoreRepo.setCredits(currentCredits + 1)
                                 }
                             }
-                            // Show error message to the client
-                            Toast.makeText(this@MainActivity,
+                            Toast.makeText(
+                                this@MainActivity,
                                 "Erro de Servidor: ${e.message}. Favor tente mais tarde.",
-                                Toast.LENGTH_SHORT).show()
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         return@Thread
                     }
                 }
 
                 msgs.add(message)
+                val userMessage = Message(clientMessage, false)
+                messageList.add(userMessage) // Add user message to messageList
 
                 val chatCompletionRequest = ChatCompletionRequest.builder()
                     .model(model)
@@ -688,21 +750,27 @@ class MainActivity : BaseActivity() {
                     }
 
                     val choices = httpResponse.choices.stream()
-                        .map { obj: ChatCompletionChoice -> obj.message }.collect(Collectors.toList())
+                        .map { obj: ChatCompletionChoice -> obj.message }
+                        .collect(Collectors.toList())
 
                     println(choices[0].content.toString())
-                    Log.i("\nOpenAi chatCompletionRequest:",
-                        chatCompletionRequest.toString())
+                    Log.i(
+                        "\nOpenAi chatCompletionRequest:",
+                        chatCompletionRequest.toString()
+                    )
                     Log.i("\nOpenAi Output:", choices.toString())
 
                     if (choices.isNotEmpty()) {
                         runOnUiThread {
                             dismissProgressDialog()
-                            messageList.add(Message(choices[0].content.toString().trim(), true))
+                            val assistantMessage = Message(choices[0].content.toString().trim(), true)
+                            messageList.add(assistantMessage) // Add assistant message to messageList
+                            Log.i("msgs",msgs.toString())
                             speakText(choices[0].content.toString().trim())
                             Log.i("speakText", messageList[0].toString())
                             chatAdapter!!.notifyDataSetChanged()
-                            Objects.requireNonNull(chatView!!.layoutManager)?.scrollToPosition(messageList.size - 1)
+                            Objects.requireNonNull(chatView!!.layoutManager)
+                                ?.scrollToPosition(messageList.size - 1)
                             thisSessionMsgCounter += 1
                             incrementMessageSentCounter()
                             Log.i("thisSessionMsgCounter", thisSessionMsgCounter.toString())
@@ -711,7 +779,7 @@ class MainActivity : BaseActivity() {
                             }
                             CoroutineScope(Dispatchers.Main).launch {
                                 firestoreRepo.totalMsgs.first().let { currentMsgs ->
-                                    if (currentMsgs == 20 || currentMsgs == 50){
+                                    if (currentMsgs == 20 || currentMsgs == 50) {
                                         feedbackPopup()
                                     }
                                 }
@@ -725,10 +793,11 @@ class MainActivity : BaseActivity() {
                         CoroutineScope(Dispatchers.Main).launch {
                             firestoreRepo.credits.first().let { currentCredits ->
                                 firestoreRepo.setCredits(currentCredits + 1)
-                                // Show timeout error to the client
-                                Toast.makeText(this@MainActivity, "Erro: " +
-                                        "O servidor demorou demais para responder",
-                                    Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@MainActivity, "Erro: " +
+                                            "O servidor demorou demais para responder",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     }
@@ -738,18 +807,16 @@ class MainActivity : BaseActivity() {
                 e.printStackTrace()
                 runOnUiThread {
                     dismissProgressDialog()
-                    // Show error message to the client
-                    Toast.makeText(this@MainActivity,
-                        "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
+                    CoroutineScope(Dispatchers.Main).launch {
+                        firestoreRepo.credits.first().let { currentCredits ->
+                            firestoreRepo.setCredits(currentCredits + 1)
+                            Toast.makeText(this@MainActivity,
+                                "Erro: ${e.message}", Toast.LENGTH_SHORT).show()                        }
+                    }
                 }
             }
         }
         thread.start()
-    }
-
-    private fun gotoShop() {
-        val intent = Intent(this@MainActivity, Wallet::class.java)
-        startActivity(intent)
     }
 
     private fun gotoForm() {
@@ -799,6 +866,11 @@ class MainActivity : BaseActivity() {
                 editMessage?.setText(Objects.requireNonNull(res)[0])
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        observeFontSize()
     }
 
     override fun onDestroy() {

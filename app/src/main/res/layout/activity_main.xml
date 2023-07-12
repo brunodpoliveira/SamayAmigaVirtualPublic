@@ -84,12 +84,13 @@
     <EditText
         android:id="@+id/editMessage"
         android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content" 
         android:background="@color/backgroundTintButtonColor"
         android:backgroundTintMode="add"
+        android:minHeight="50dp"
         android:ems="13"
         android:hint="@string/digite_mensagem_aqui"
-        android:inputType="text"
+        android:inputType="text|textMultiLine"
         android:padding="5dp"
         android:textColor="@color/TextMsgColor"
         android:textColorHint="@color/TextMsgColor"
@@ -100,7 +101,7 @@
         app:layout_constraintTop_toTopOf="@+id/speak"
         app:layout_constraintVertical_bias="0.0" />
 
-    <TextView
+        <TextView
         android:id="@+id/creditsHead"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

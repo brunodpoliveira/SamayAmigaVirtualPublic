@@ -17,9 +17,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -50,6 +52,8 @@ class FirestoreRepo {
 
     private val _dailyLoginDay = MutableStateFlow("")
     val dailyLoginDay: Flow<String> = _dailyLoginDay.asStateFlow()
+
+    val _fontSize = MutableStateFlow(20) // Assuming 20 is the default font size
 
     init{
         CoroutineScope(Dispatchers.IO).launch {
@@ -286,6 +290,7 @@ class FirestoreRepo {
                             "last_active" to "",
                             "last_notification_check" to "",
                             "last_credit_date" to "",
+                            "font_size" to 20
                         )
                         userDocument.set(defaultData, SetOptions.merge()).await() // Force sync
                         fetchData()
@@ -371,6 +376,7 @@ class FirestoreRepo {
             }
         }
     }
+
     private suspend fun updateUserActiveTimestamp() {
         val userDocument = getUserDocument() ?: return
         try {
@@ -400,6 +406,63 @@ class FirestoreRepo {
             } catch (e: FirebaseFirestoreException) {
                 Log.e("saveFcmToken", "Error saving FCM token", e)
             }
+        }
+    }
+
+    fun fetchFontSize(): Flow<Int> = callbackFlow {
+        val userDocument = getUserDocument()
+        val listener = userDocument?.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.w("fetchFontSize", "Listen failed.", error)
+            }
+            if (snapshot != null && snapshot.exists()) {
+                val fontSize = snapshot.getLong("font_size")
+                if (fontSize != null) {
+                    try {
+                        trySend(fontSize.toInt()).isSuccess
+                    } catch (e: Exception) {
+                        Log.e("fetchFontSize", "Error sending data", e)
+                    }
+
+                } else {
+                    // Font size not found, add the field with a default value of 20
+                    try {
+                        userDocument.update("font_size", 20).addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                trySend(20).isSuccess
+                            } else {
+                                Log.e("fetchFontSize", "Error adding font size", task.exception)
+                                close() // close the flow on error
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("fetchFontSize", "Error adding font size", e)
+                        close() // close the flow on error
+                    }
+                }
+            }
+        }
+        // clean up when flow is not in use
+        awaitClose {
+            listener?.remove()
+        }
+    }
+
+    suspend fun setFontSize(newSize: Int) {
+        Log.i("setFontSize", "setFontSize reached")
+        val userDocument = getUserDocument()
+        userDocument?.let { doc ->
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    doc.update("font_size", newSize).await()
+                    _fontSize.emit(newSize)
+                    Log.i("setFontSize", newSize.toString())
+                } catch (e: FirebaseFirestoreException) {
+                    Log.e("setFontSize", "Error setting font size", e)
+                }
+            }
+        } ?: run {
+            Log.e("setFontSize", "User document is null")
         }
     }
 }
