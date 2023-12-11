@@ -6,13 +6,14 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <uses-feature android:glEsVersion="0x00020000"
         android:required="true"/>
 
     <application
         android:name=".QonversionApp"
-        android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Samay - Amiga Virtual"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -29,17 +30,13 @@
 
         <activity android:name=".ui.main.MainActivity" />
         <activity
-            android:name=".Splash"
+            android:name=".auth.SignIn"
             android:theme="@style/AppTheme"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity android:name=".auth.SignIn" />
-        <activity
-            android:name=".ui.main.ProfileFragment">
         </activity>
         <activity android:name=".ui.wallet.Wallet" />
         <receiver android:name=".utils.AlarmNotificationReceiver"
@@ -56,6 +53,5 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
     </application>
 </manifest>

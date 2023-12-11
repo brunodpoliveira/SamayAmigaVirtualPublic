@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.firebase-perf'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.google.firebase.crashlytics'
+apply plugin: 'kotlin-kapt'
 
 def getApiKey() {
     return "${project.API_KEY}"
@@ -16,19 +18,19 @@ def getQonversionProjectKey() {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdk 34
     packagingOptions {
         resources {
-            excludes += ['META-INF/INDEX.LIST', 'META-INF/DEPENDENCIES']
+            excludes += ['META-INF/INDEX.LIST', 'META-INF/DEPENDENCIES', 'mozilla/public-suffix-list.txt']
         }
     }
 
     defaultConfig {
         applicationId "com.internaltest.sarahchatbotmvp"
         minSdk 26
-        targetSdk 33
-        versionCode 41
-        versionName "13"
+        targetSdk 34
+        versionCode 44
+        versionName "14.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -42,6 +44,10 @@ android {
         }
     }
 
+    kapt {
+        correctErrorTypes = true
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -50,7 +56,6 @@ android {
         jvmTarget=17
     }
     namespace 'com.internaltest.sarahchatbotmvp'
-    buildToolsVersion '31.0.0'
     ndkVersion '23.0.7599858'
 
     buildTypes.each { type ->
@@ -66,43 +71,67 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.2"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'com.google.android.material:material:1.10.0'
     implementation 'org.jetbrains:annotations:24.0.1'
+    implementation 'com.google.firebase:firebase-database-ktx:20.3.0'
+    annotationProcessor 'androidx.room:room-compiler:2.6.1'
+    implementation "androidx.room:room-runtime:2.6.1"
+    kapt "androidx.room:room-compiler:2.6.1"
+    implementation "androidx.room:room-ktx:2.6.1"
+    testImplementation "androidx.room:room-testing:2.6.1"
+
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    implementation 'androidx.recyclerview:recyclerview:1.3.0'
+    implementation 'androidx.test.ext:junit-ktx:1.1.5'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
     implementation 'com.google.android.play:core:1.10.3'
     implementation 'com.theokanning.openai-gpt3-java:api:0.14.0'
     implementation 'com.theokanning.openai-gpt3-java:service:0.14.0'
-    implementation 'com.google.android.play:integrity:1.1.0'
+    implementation 'com.facebook.stetho:stetho-okhttp3:1.5.1'
 
     //firebase
     implementation platform('com.google.firebase:firebase-bom:32.0.0')
-    implementation 'com.google.firebase:firebase-analytics:21.3.0'
-    implementation 'com.google.firebase:firebase-perf:20.3.3'
-    implementation 'com.google.firebase:firebase-auth:22.0.0'
-    implementation 'com.google.firebase:firebase-messaging:23.1.2'
-    implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.6'
+    implementation 'com.google.firebase:firebase-analytics:21.5.0'
+    implementation 'com.google.firebase:firebase-perf:20.5.1'
+    implementation 'com.google.firebase:firebase-auth:22.3.0'
+    implementation 'com.google.firebase:firebase-messaging:23.4.0'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
-    implementation 'com.google.firebase:firebase-auth-ktx'
 
-    implementation 'com.google.android.gms:play-services-auth:20.6.0'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
     implementation 'com.github.bumptech.glide:glide:4.15.1'
-    implementation 'io.qonversion.android.sdk:sdk:5.0.0'
-    implementation 'androidx.activity:activity-compose:1.7.2'
-    implementation "androidx.core:core-ktx:1.10.1"
+    implementation 'io.qonversion.android.sdk:sdk:5.0.2'
+    implementation 'androidx.activity:activity-compose:1.8.1'
+    implementation "androidx.core:core-ktx:1.12.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.datastore:datastore-preferences:1.0.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.2'
 
     //notification
-    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    implementation "androidx.work:work-runtime-ktx:2.9.0"
+
+    //test
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    testImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'androidx.test.ext:truth:1.5.0'
+    testImplementation 'org.robolectric:robolectric:4.10.3'
+    testImplementation "org.mockito.kotlin:mockito-kotlin:5.0.0"
+
+    implementation 'com.google.android.play:integrity:1.2.0'
+    implementation 'com.google.api-client:google-api-client-android:1.23.0' exclude module: 'httpclient'
+    implementation 'com.google.http-client:google-http-client-gson:1.26.0'
+    implementation 'com.google.api-client:google-api-client:1.25.0'
+    implementation 'com.google.apis:google-api-services-drive:v3-rev136-1.25.0'
+
+    // Lifecycle components
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
 }
 repositories {
     mavenCentral()

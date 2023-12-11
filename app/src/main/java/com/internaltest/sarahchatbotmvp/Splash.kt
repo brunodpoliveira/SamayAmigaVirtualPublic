@@ -2,14 +2,14 @@ package com.internaltest.sarahchatbotmvp
 
 import android.content.Intent
 import android.os.Bundle
-import com.internaltest.sarahchatbotmvp.base.BaseActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.internaltest.sarahchatbotmvp.auth.SignIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class Splash : BaseActivity() {
+class Splash : AppCompatActivity() {
     private val uiScope = CoroutineScope(Dispatchers.Main)
     companion object {
         var isCurrentActivity = false

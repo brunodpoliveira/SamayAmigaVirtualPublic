@@ -11,20 +11,25 @@ class ProgressDialogFragment : DialogFragment() {
         private const val MESSAGE_KEY = "message"
 
         fun newInstance(message: String): ProgressDialogFragment {
-            val dialogFragment = ProgressDialogFragment()
-            val args = Bundle()
-            args.putString(MESSAGE_KEY, message)
-            dialogFragment.arguments = args
-            return dialogFragment
+            return ProgressDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putString(MESSAGE_KEY, message)
+                }
+                isCancelable = false  // This ensures the dialog is not cancelable
+            }
         }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val message = arguments?.getString(MESSAGE_KEY) ?: ""
-        return AlertDialog.Builder(requireActivity())
+        return AlertDialog.Builder(requireContext())
             .setMessage(message)
             .setCancelable(false)
-            //.setProgressBarIndeterminate(true)
             .create()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dialog?.setCanceledOnTouchOutside(false)  // Prevent dismissing when touching outside
     }
 }

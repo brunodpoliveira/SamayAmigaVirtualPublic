@@ -9,6 +9,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.internaltest.sarahchatbotmvp.R
+import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

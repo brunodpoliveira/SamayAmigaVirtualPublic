@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -18,10 +19,10 @@ import com.google.android.gms.common.SignInButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.ktx.Firebase
 import com.internaltest.sarahchatbotmvp.BuildConfig
 import com.internaltest.sarahchatbotmvp.R
-import com.internaltest.sarahchatbotmvp.base.BaseActivity
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
 import com.qonversion.android.sdk.Qonversion
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Objects
 
-class SignIn : BaseActivity() {
+class SignIn : AppCompatActivity() {
     private var signInButton: SignInButton? = null
     private var clearCacheBtn: Button? = null
     private var privacyBtn: Button? = null
@@ -45,6 +46,13 @@ class SignIn : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // If user is already logged in, redirect to MainActivity
+        val currentUser = Firebase.auth.currentUser
+        if (currentUser != null) {
+            gotoChat()
+            finish()
+            return
+        }
         setContentView(R.layout.activity_sign_in)
         privacyBtn = findViewById(R.id.privacy)
         termsOfUseBtn = findViewById(R.id.terms_of_use)
@@ -90,6 +98,7 @@ class SignIn : BaseActivity() {
         isCurrentActivity = false
     }
 
+    @Deprecated("update")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
@@ -115,6 +124,7 @@ class SignIn : BaseActivity() {
             deleteFile(cacheDir)
             true
         } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
             e.printStackTrace()
             false
         }
@@ -194,16 +204,24 @@ class SignIn : BaseActivity() {
     }
 
     private fun gotoPrivacy() {
-        val browserIntent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse("PRIVACY_LINK_HERE")
-        )
-        startActivity(browserIntent)
+        val browserIntent =
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://teqbot.com.br/notificacao-de-privacidade/"))
+        if (browserIntent.resolveActivity(packageManager) != null) {
+            startActivity(browserIntent)
+        } else {
+            Toast.makeText(this, "Navegador de internet não encontrado. " +
+                    "Por favor, instale um navegador.", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun gotoTermsOfUse() {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse("TERMS_OF_USE_LINK_HERE"))
-        startActivity(browserIntent)
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://teqbot.com.br/termos-de-servico/"))
+        if (browserIntent.resolveActivity(packageManager) != null) {
+            startActivity(browserIntent)
+        } else {
+            Toast.makeText(this, "Navegador de internet não encontrado. " +
+                    "Por favor, instale um navegador.", Toast.LENGTH_LONG).show()
+        }
     }
 }

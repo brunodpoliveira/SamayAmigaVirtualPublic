@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -43,7 +44,19 @@ object NotificationScheduler {
         }
         val pendingIntent = PendingIntent.getBroadcast(context, XMAS_REQUEST_CODE, intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        alarmMgr.setExact(AlarmManager.RTC_WAKEUP, xmasCal.timeInMillis, pendingIntent)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmMgr.canScheduleExactAlarms()) {
+                alarmMgr.setExact(AlarmManager.RTC_WAKEUP, xmasCal.timeInMillis, pendingIntent)
+            } else {
+                alarmMgr.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(xmasCal.timeInMillis, pendingIntent),
+                    pendingIntent
+                )
+            }
+        } else {
+            alarmMgr.setExact(AlarmManager.RTC_WAKEUP, xmasCal.timeInMillis, pendingIntent)
+        }
     }
 
     private fun scheduleNotification(context: Context, requestCode: Int, delay: Long, timeUnit: TimeUnit) {
@@ -61,7 +74,18 @@ object NotificationScheduler {
             add(getCalendarFieldForTimeUnit(timeUnit), delay.toInt())
         }
 
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (alarmManager.canScheduleExactAlarms()) {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+            } else {
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(calendar.timeInMillis, pendingIntent),
+                    pendingIntent
+                )
+            }
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        }
     }
 
     private fun getCalendarFieldForTimeUnit(timeUnit: TimeUnit): Int {
@@ -85,8 +109,6 @@ object NotificationScheduler {
 
         if (xmasCal.before(nowCal))
             xmasCal.add(Calendar.YEAR, 1)
-
         return xmasCal
     }
 }
-

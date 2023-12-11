@@ -19,6 +19,7 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 
+//NÃO DELETAR
 class BillingManager(private val context: Context, private val userId: String) {
     private lateinit var billingClient: BillingClient
 

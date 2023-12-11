@@ -8,13 +8,14 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.work.CoroutineWorker
+import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.google.firebase.firestore.FieldValue
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.data.Constants
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
@@ -112,10 +113,12 @@ suspend fun showInactiveNotificationIfNeeded(context: Context) {
     }
 }
 
-class InactiveNotificationWorker(context: Context, params: WorkerParameters):
-    CoroutineWorker(context, params) {
-    override suspend fun doWork(): Result {
-        showInactiveNotificationIfNeeded(applicationContext)
+class InactiveNotificationWorker(context: Context, params: WorkerParameters) :
+    Worker(context, params) {
+    override fun doWork(): Result {
+        runBlocking {
+            showInactiveNotificationIfNeeded(applicationContext)
+        }
         return Result.success()
     }
 }

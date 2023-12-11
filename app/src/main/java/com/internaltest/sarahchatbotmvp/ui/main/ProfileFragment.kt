@@ -1,13 +1,9 @@
 package com.internaltest.sarahchatbotmvp.ui.main
 
-import android.content.Context
-import android.content.DialogInterface
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.util.TypedValue
@@ -19,30 +15,30 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.auth.SignIn
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
-import com.internaltest.sarahchatbotmvp.models.Conversation
+import com.internaltest.sarahchatbotmvp.data.SaveLoadConversationManager
 import com.internaltest.sarahchatbotmvp.ui.wallet.Wallet
+import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showDeleteAccountConfirmationDialog
+import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showLoadConversationDialog
+import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showLogoutAlertDialog
+import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showToggleDarkModeAlertDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.io.FileOutputStream
-import java.io.InputStreamReader
 import java.util.Locale
 
 class ProfileFragment : Fragment() {
@@ -50,6 +46,8 @@ class ProfileFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
     private lateinit var firestoreRepo: FirestoreRepo
     private lateinit var textToSpeech: TextToSpeech
+    private lateinit var conversationManager: SaveLoadConversationManager
+    private val mainActivity by lazy { activity as MainActivity }
 
     private var logoutBtn: Button? = null
     private var walletBtn: Button? = null
@@ -73,6 +71,8 @@ class ProfileFragment : Fragment() {
     companion object {
         private const val REQUEST_CODE_PICK_JSON_FILE = 100
         private const val REQUEST_CODE_PERMISSIONS = 200
+        const val OPEN_DOCUMENT_REQUEST_CODE = 300
+        const val OPEN_LOCAL_FILE_REQUEST_CODE = 400
     }
 
     override fun onCreateView(
@@ -107,51 +107,20 @@ class ProfileFragment : Fragment() {
             this?.setOnClickListener { deleteUserAccountAndData() }
         }
 
+        conversationManager = SaveLoadConversationManager(mainActivity, requireContext())
+
         saveConversationButton = view.findViewById(R.id.saveConversationButton)
         saveConversationButton?.setOnClickListener {
-            (activity as MainActivity).let { MainActivity ->
-
-                val subscription = MainActivity.subscriptionTextView?.text
-
-                if (subscription == "PREMIUM" || subscription == "GPT4") {
-                    val conversation = Conversation(
-                        userName.toString(),
-                        MainActivity.messageList
-                    )
-                    MainActivity.showProgressDialog("Salvando...")
-                    val userNameText = userName?.text?.toString()
-                    if (userNameText != null) {
-                        saveConversation("$userNameText-${System.currentTimeMillis()}.json", conversation)
-                    }
-                    MainActivity.dismissProgressDialog()
-                    MainActivity.showProgressDialog("Salvo!")
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        MainActivity.dismissProgressDialog()
-                    }, 2000) // This represents a delay of 2 seconds.
-
-                } else {
-                    Toast.makeText(requireContext(), "Disponível apenas para inscritos GPT4 ou Premium", Toast.LENGTH_LONG).show()
-                }
-            }
+            conversationManager.saveConversationOnClick(
+                userName?.text.toString(),
+                userId = userId?.text.toString()
+            )
         }
 
         loadConversationButton = view.findViewById(R.id.loadConversationButton)
         loadConversationButton?.setOnClickListener {
-            val files: Array<String> = requireContext().fileList()
-            val jsonFiles: List<String> = files.filter { it.endsWith(".json") }
-
-            if(jsonFiles.isEmpty()){
-                Toast.makeText(context, "Nenhuma coversa encontrada", Toast.LENGTH_LONG).show()
-            } else {
-                val builder: AlertDialog.Builder = AlertDialog.Builder(requireContext())
-                builder.setTitle("Escolha uma conversa")
-
-                builder.setItems(jsonFiles.toTypedArray()) { dialog, which ->
-                    openAndLoadConversation(jsonFiles[which])
-                    dialog.dismiss()
-                }
-                builder.show()
-            }
+            showLoadConversationDialog(requireContext(), conversationManager,
+                conversationManager::loadConversationOnClick)
         }
 
         parentFragment?.view?.findViewById<NavigationView>(R.id.navigation_view)?.apply {
@@ -184,58 +153,23 @@ class ProfileFragment : Fragment() {
                 textToSpeechInitialized = true
             }
         }
+        observeTextToSpeech()
 
         //implementando lógica do botão modo escuro
         toggleDarkSwitch?.setOnClickListener {
             val isChecked = toggleDarkSwitch?.isChecked ?: false
-            toggleDarkSwitch!!.isChecked = !isChecked // Revert the switch state temporarily
-            val alertDialogBuilder = AlertDialog.Builder(requireContext())
-            alertDialogBuilder.setMessage(
-                "Tem certeza? Todo o histórico de conversa será apagado ao trocar tema"
-            )
-            // Set the positive button with the default text color
-            alertDialogBuilder.setPositiveButton("Sim", null)
-            // Set the negative button with the default text color
-            alertDialogBuilder.setNegativeButton("Não", null)
-
-            val alertDialog = alertDialogBuilder.create()
-            alertDialog.setOnShowListener {
-                // Get the current theme
-                val currentTheme = AppCompatDelegate.getDefaultNightMode()
-
-                // Set the text color for the positive and negative buttons based on the current theme
-                val buttonTextColor =
-                    if (currentTheme == AppCompatDelegate.MODE_NIGHT_YES) {
-                        Color.WHITE
-                    } else {
-                        Color.BLACK
-                    }
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE)
-                    .setTextColor(buttonTextColor)
-                alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE)
-                    .setTextColor(buttonTextColor)
-
-                // Set the click listeners for the buttons after setting the text color
-                alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
-                    // Toggle the dark mode value and update it in Firestore
-
-                    val newDarkModeValue = !(isDarkModeOn ?: false)
-                    isDarkModeOn = newDarkModeValue
+            showToggleDarkModeAlertDialog(
+                context = requireContext(),
+                isChecked = isChecked,
+                toggleDarkSwitch = toggleDarkSwitch!!,
+                applyDarkMode = { newValue ->
                     CoroutineScope(Dispatchers.Main).launch {
-                        firestoreRepo.setDarkMode(newDarkModeValue)
-                        Log.i("new dark mode value", newDarkModeValue.toString())
+                        firestoreRepo.setDarkMode(newValue)
+                        Log.i("new dark mode value", newValue.toString())
                     }
-                    alertDialog.dismiss() // Close the dialog after handling the click
-
-                    applyDarkMode(isDarkModeOn) // Apply the new theme
-                }
-
-                alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
-                    alertDialog.dismiss() // Close the dialog after handling the click
-                    toggleDarkSwitch!!.isChecked = !isChecked // Revert the switch state
-                }
-            }
-            alertDialog.show()
+                },
+                newDarkModeValue = { !(isDarkModeOn ?: false) }
+            )
         }
         fontSizeSeekBar = view.findViewById(R.id.fontSizeSeekBar)
         CoroutineScope(Dispatchers.Main).launch {
@@ -259,166 +193,42 @@ class ProfileFragment : Fragment() {
         })
     }
 
-    private fun applyDarkMode(isDarkModeOn: Boolean?) {
-        if (isDarkModeOn == true) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+    private fun observeTextToSpeech() {
+        firestoreRepo.textToSpeech.asLiveData().observe(viewLifecycleOwner) { textToSpeechEnabled ->
+            textToSpeechSwitch?.isChecked = textToSpeechEnabled
+            if (textToSpeechEnabled && mainActivity.textToSpeechInitialized) {
+                mainActivity.textToSpeech.language = Locale("pt", "BR")
+                lifecycleScope.launch {
+                    mainActivity.speakText("Texto para Fala Ativado")
+                }
+            }
         }
-        toggleDarkSwitch!!.isChecked = isDarkModeOn ?: false
     }
 
     private fun logout() {
-        val alertDialogBuilder = AlertDialog.Builder(requireContext())
-        alertDialogBuilder.setMessage("Tem certeza?")
+        showLogoutAlertDialog(requireContext()) {
+            mSignInClient?.signOut()?.addOnCompleteListener(requireActivity()) {
 
-        alertDialogBuilder.setPositiveButton("Logout", null)
-        alertDialogBuilder.setNegativeButton("Voltar", null)
-
-        val alertDialog = alertDialogBuilder.create()
-        alertDialog.setOnShowListener {
-            // Get the current theme
-            val currentTheme = AppCompatDelegate.getDefaultNightMode()
-
-            // Set the text color for the positive and negative buttons based on the current theme
-            val buttonTextColor = if (currentTheme == AppCompatDelegate.MODE_NIGHT_YES) {
-                Color.WHITE
-            } else {
-                Color.BLACK
-            }
-            alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
-            alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
-
-            // Set the click listeners for the buttons after setting the text color
-            alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
-                mSignInClient?.signOut()?.addOnCompleteListener(requireActivity()) { goToSignIn() }
-
-                alertDialog.dismiss() // Close the dialog after handling the click
-            }
-
-            alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
-                alertDialog.dismiss() // Close the dialog after handling the click
-            }
-        }
-        alertDialog.show()
-    }
-
-    private fun openAndLoadConversation(fileName: String) {
-        val jsonFile = StringBuilder()
-
-        try {
-            requireContext().openFileInput(fileName).use { fis ->
-                InputStreamReader(fis, Charsets.UTF_8).buffered().use { reader ->
-                    var line: String? = reader.readLine()
-                    while (line != null) {
-                        jsonFile.append(line)
-                        line = reader.readLine()
-                    }
-                }
-            }
-
-            val gson = Gson()
-            val conversation = gson.fromJson(jsonFile.toString(), Conversation::class.java)
-
-            (activity as MainActivity).messageList.clear()
-            (activity as MainActivity).messageList.addAll(conversation.messages)
-            (activity as MainActivity).chatAdapter?.notifyDataSetChanged()
-            Toast.makeText(requireContext(), "Conversa carregada", Toast.LENGTH_SHORT).show()
-
-        } catch(e: Exception) {
-            Toast.makeText(requireContext(), "Erro ao carregar conversa", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        }
-    }
-    private fun saveConversation(fileName: String, conversation: Conversation) {
-        val gson = GsonBuilder().setPrettyPrinting().create()
-        val jsonString = gson.toJson(conversation)
-
-        val context = requireContext().applicationContext
-        var outputStream: FileOutputStream? = null
-        try {
-            outputStream = context.openFileOutput(fileName, Context.MODE_PRIVATE)
-            outputStream.write(jsonString.toByteArray())
-            Toast.makeText(context, "Conversa Salva", Toast.LENGTH_SHORT).show()
-
-            // Get the file's path
-            val filePath = context.getFileStreamPath(fileName)?.absolutePath ?: "Unknown path"
-
-            Log.d("saveConversation", "File has been saved at: $filePath")
-        } catch (e: Exception) {
-            Toast.makeText(context, "Falha ao salvar conversa", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
-        } finally {
-            // Ensure stream is closed even in case of exception
-            try {
-                outputStream?.close()
-            } catch (e: Exception) {
-                e.printStackTrace()
+                goToSignIn()
             }
         }
     }
 
     private fun deleteUserAccountAndData() {
-        val alertDialogBuilder = AlertDialog.Builder(requireContext())
-        alertDialogBuilder.setMessage("AVISO: Você tem certeza que deseja deletar sua conta e dados? " +
-                "Esta ação não pode ser desfeita ")
-
-        // Set the positive button with the default text color
-        alertDialogBuilder.setPositiveButton("Deletar", null)
-        // Set the negative button with the default text color
-        alertDialogBuilder.setNegativeButton("Cancelar", null)
-
-        val alertDialog = alertDialogBuilder.create()
-        alertDialog.setOnShowListener {
-            // Get the current theme
-            val currentTheme = AppCompatDelegate.getDefaultNightMode()
-
-            // Set the text color for the positive and negative buttons based on the current theme
-            val buttonTextColor = if (currentTheme == AppCompatDelegate.MODE_NIGHT_YES) {
-                Color.WHITE
-            } else {
-                Color.BLACK
-            }
-            alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(buttonTextColor)
-            alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(buttonTextColor)
-
-            // Set the click listeners for the buttons after setting the text color
-            alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
-                val user = auth.currentUser
-                if (user != null) {
-                    val db = FirebaseFirestore.getInstance()
-                    db.collection("users")
-                        .document(user.uid)
-                        .delete()
-                        .addOnSuccessListener {
-                            // Delete user's account from FirebaseAuth
-                            user.delete()
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        Toast.makeText(requireContext(), "Deletado com sucesso"
-                                            ,Toast.LENGTH_LONG).show()
-                                        goToSignIn()
-                                    } else {
-                                        Toast.makeText(requireContext(), "Falha durante processo." +
-                                                "Tente novamente.", Toast.LENGTH_LONG).show()
-                                    }
-                                }
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(requireContext(), "Falha durante processo." +
-                                    "Tente novamente.", Toast.LENGTH_LONG).show()
-                        }
-                }
-
-                alertDialog.dismiss() // Close the dialog after handling the click
-            }
-
-            alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
-                alertDialog.dismiss() // Close the dialog after handling the click
-            }
+        showDeleteAccountConfirmationDialog(requireContext(), conversationManager,auth) {
+            goToSignIn()
         }
+    }
 
-        alertDialog.show()
+    private fun goToWallet() {
+        val intent = Intent(requireContext(), Wallet::class.java)
+        requireActivity().startActivity(intent)
+    }
+
+    private fun goToSignIn() {
+        FirebaseAuth.getInstance().signOut()
+        val intent = Intent(requireContext(), SignIn::class.java)
+        requireActivity().startActivity(intent)
     }
 
     override fun onStart() {
@@ -427,22 +237,23 @@ class ProfileFragment : Fragment() {
         if (task.isSuccessful) {
             val account = task.result
             if (account != null) {
-                userName!!.text = account.displayName
+                userName?.text = account.displayName
             }
             if (account != null) {
-                userEmail!!.text = account.email
+                userEmail?.text = account.email
             }
             if (account != null) {
-                userId!!.text = account.id
+                userId?.text = account.id
             }
             if (account != null){
-                firebaseId!!.text = auth.currentUser!!.uid
+                firebaseId?.text = auth.currentUser?.uid
             }
             try {
                 if (account != null) {
                     Glide.with(this).load(account.photoUrl).into(profileImage!!)
                 }
             } catch (e: NullPointerException) {
+                FirebaseCrashlytics.getInstance().recordException(e)
                 Toast.makeText(requireContext(), "imagem não encontrada", Toast.LENGTH_LONG).show()
             }
         } else {
@@ -450,6 +261,21 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    @Deprecated("update")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            when (requestCode) {
+                OPEN_DOCUMENT_REQUEST_CODE, OPEN_LOCAL_FILE_REQUEST_CODE -> {
+                    data.data?.let {
+                        conversationManager.loadConversation(requestCode == OPEN_DOCUMENT_REQUEST_CODE)
+                    }
+                }
+            }
+        }
+    }
+
+    @Deprecated("update")
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -466,7 +292,7 @@ class ProfileFragment : Fragment() {
                 }
                 startActivityForResult(intent, REQUEST_CODE_PICK_JSON_FILE)
             } else {
-                Toast.makeText(requireContext(), "Permissão negada.Não foi possível carregar conversa.",
+                Toast.makeText(requireContext(), "Permissão negada",
                     Toast.LENGTH_SHORT).show()
             }
         }
@@ -475,15 +301,5 @@ class ProfileFragment : Fragment() {
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         view?.visibility = if (hidden) View.GONE else View.VISIBLE
-    }
-
-    private fun goToWallet() {
-        val intent = Intent(requireContext(), Wallet::class.java)
-        requireActivity().startActivity(intent)
-    }
-
-    private fun goToSignIn() {
-        val intent = Intent(requireContext(), SignIn::class.java)
-        requireActivity().startActivity(intent)
     }
 }

@@ -30,28 +30,17 @@
             android:text="@string/email"
             android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/userIdSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="@string/id_google_sub"
-            android:textSize="14sp" />
-
+        <!--
+        deixe esses dois aqui; é usado no saveconversationonclick para pegar os
+        dados do usuário para salvar e carregar corretamente
+        -->
         <TextView
             android:id="@+id/userId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="@string/id"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/FirebaseIdSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/id_firebase_sub"
-            android:textSize="14sp" />
+            android:textSize="0sp" />
 
         <TextView
             android:id="@+id/firebaseId"
@@ -59,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="@string/id"
-            android:textSize="12sp" />
+            android:textSize="0sp" />
 
         <TextView
             android:id="@+id/ttsSubtitle"
