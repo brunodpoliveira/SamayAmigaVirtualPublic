@@ -77,7 +77,7 @@ poder usar o serviço de chat
 11. Conclua a configuração do Firestore Cloud Functions
 
 12. Adicione um link para seus termos de uso e privacidade
-    * Substitua "PRIVACY_LINK_HERE" e "TERMS_OF_USE_LINK_HERE" com links para o seus termos
+    * Substitua "INSERT LINK HERE" com links para o seus termos
 
 # Configuração do projeto Firebase
 

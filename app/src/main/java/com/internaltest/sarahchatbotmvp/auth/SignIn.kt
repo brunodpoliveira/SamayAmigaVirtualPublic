@@ -205,7 +205,7 @@ class SignIn : AppCompatActivity() {
 
     private fun gotoPrivacy() {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse("https://teqbot.com.br/notificacao-de-privacidade/"))
+            Intent(Intent.ACTION_VIEW, Uri.parse("INSERT LINK HERE"))
         if (browserIntent.resolveActivity(packageManager) != null) {
             startActivity(browserIntent)
         } else {
@@ -216,7 +216,7 @@ class SignIn : AppCompatActivity() {
 
     private fun gotoTermsOfUse() {
         val browserIntent =
-            Intent(Intent.ACTION_VIEW, Uri.parse("https://teqbot.com.br/termos-de-servico/"))
+            Intent(Intent.ACTION_VIEW, Uri.parse("INSERT LINK HERE"))
         if (browserIntent.resolveActivity(packageManager) != null) {
             startActivity(browserIntent)
         } else {
