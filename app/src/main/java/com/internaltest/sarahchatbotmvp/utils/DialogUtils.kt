@@ -1,60 +1,30 @@
 package com.internaltest.sarahchatbotmvp.utils
 
+import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
-import android.provider.Settings
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentManager
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.FirebaseFirestore
-import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
+import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.data.SaveLoadConversationManager
-import com.internaltest.sarahchatbotmvp.data.WalletRepo
 import com.internaltest.sarahchatbotmvp.models.Conversation
 import com.internaltest.sarahchatbotmvp.ui.main.ProgressDialogFragment
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import java.io.File
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 object DialogUtils {
 
     private var progressDialogFragment: ProgressDialogFragment? = null
-
-    fun showProgressDialog(
-        fragmentManager: FragmentManager,
-        message: String
-    ) {
-        if(progressDialogFragment?.isAdded != true) {
-            progressDialogFragment = ProgressDialogFragment.newInstance(message).apply {
-                isCancelable = false
-            }
-            progressDialogFragment?.show(fragmentManager, "progressDialog")
-        }
-    }
-
-    fun dismissProgressDialog() {
-        progressDialogFragment?.dismissAllowingStateLoss()
-        progressDialogFragment = null
-    }
 
     fun isProgressDialogVisible(): Boolean {
         return progressDialogFragment?.dialog?.isShowing == true
@@ -135,7 +105,8 @@ object DialogUtils {
         toggleDarkSwitch: SwitchCompat,
         applyDarkMode: (Boolean) -> Unit,
         newDarkModeValue: () -> Boolean
-    ) {
+    )  {
+
         val dialog = createAlertDialog(
             context,
             "Tem certeza?",
@@ -146,48 +117,13 @@ object DialogUtils {
                 // Toggle the dark mode value and update it in Firestore
                 val newValue = newDarkModeValue()
                 applyDarkMode(newValue) // Apply the new theme
+
             },
             { dialog, _ ->
                 dialog.dismiss()
                 toggleDarkSwitch.isChecked = isChecked // Revert the switch state
             }
         )
-        dialog.show()
-    }
-
-    private fun showUpdateAlertDialog(context: Context, appPackageName: String) {
-        val dialog = createAlertDialog(
-            context,
-            "Atualização Disponível",
-            "Uma nova versão do app está disponível. " +
-                    "Favor atualize para a última versão.",
-            "Atualizar",
-            "Agora Não",
-            { _, _ ->
-                // Redirect the user to the app's page in the Google Play Store
-                try {
-                    context.startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("market://details?id=$appPackageName")
-                        )
-                    )
-                } catch (e: android.content.ActivityNotFoundException) {
-                    FirebaseCrashlytics.getInstance().recordException(e)
-                    context.startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")
-                        )
-                    )
-                }
-            },
-            { dialog, _ -> dialog.dismiss() }
-        )
-        dialog.setOnCancelListener {
-            // Handle cancellation here if needed
-        }
-
         dialog.show()
     }
 
@@ -208,62 +144,6 @@ object DialogUtils {
         dialog.show()
     }
 
-    //TODO atualizar para ser condição ser verificada uma vez no dia; usar logica da msg diaria p isso
-    fun checkForUpdate(context: Context, packageName: String) {
-        val firestore = FirebaseFirestore.getInstance()
-        val appVersionRef = firestore.collection("app_version").document("latest")
-        appVersionRef.get().addOnSuccessListener { document ->
-            if (document != null) {
-                Log.d("Firestore checkForUpdate", "Fetched document: ${document.id}")
-
-                val latestVersion = document.getString("latest_version")
-                if (latestVersion != null) {
-                    Log.d("Firestore checkForUpdate", "Fetched latest_version: $latestVersion")
-
-                    if (isUpdateAvailable(context, latestVersion, packageName)) {
-                        showUpdateAlertDialog(context, packageName)
-                    }
-                } else {
-                    Log.d("Firestore checkForUpdate", "latest_version field not found.")
-                }
-            } else {
-                Log.d("Firestore checkForUpdate", "Document not found.")
-            }
-        }.addOnFailureListener { exception ->
-            Log.e("Firestore checkForUpdate", "Error fetching document: ", exception)
-        }
-    }
-
-    private fun isUpdateAvailable(
-        context: Context,
-        latestVersion: String,
-        packageName: String
-    ): Boolean {
-        val currentVersion: String
-        try {
-            currentVersion = context.packageManager.getPackageInfo(packageName, 0).versionName
-            Log.i("currentVersion", currentVersion)
-        } catch (e: PackageManager.NameNotFoundException) {
-            FirebaseCrashlytics.getInstance().recordException(e)
-            e.printStackTrace()
-            return false
-        }
-        return currentVersion != latestVersion
-    }
-
-    fun showNoCreditsAlertDialog(context: Context, action: () -> Unit) {
-        val dialog = createAlertDialog(
-            context,
-            "Você está sem créditos",
-            "Compre mais ou aguarde 24hrs para ter mais",
-            "Comprar créditos",
-            "OK",
-            { _, _ -> action() },
-            { dialog, _ -> dialog.dismiss() }
-        )
-        dialog.show()
-    }
-
     //TODO não deletar
     fun showFeedbackPopup(context: Context, action: () -> Unit) {
         val dialog = createAlertDialog(
@@ -279,16 +159,33 @@ object DialogUtils {
         dialog.show()
     }
 
-    fun showSubscriptionWarningPopup(context: Context) {
-        val dialog = createAlertDialog(
-            context,
-            "Ativação da Assinatura:",
-            "Por favor note que pode demorar até 5 minutos para ativar sua assinatura",
-            "OK",
-            "",
-            { dialog, _ -> dialog.dismiss() },
-            { dialog, _ -> dialog.dismiss() }
+    fun showSubscriptionWarningPopup(context: Context, action: () -> Unit) {
+        val dialog = Dialog(context)
+        dialog.setContentView(R.layout.dialog_signature)
+        val window = dialog.window
+        window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
         )
+        window?.decorView?.setPadding(16, 0, 16, 0)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val btnClose = dialog.findViewById<View>(R.id.close)
+        val btnCancel = dialog.findViewById<View>(R.id.tv_btn_cancel)
+        val btnOk = dialog.findViewById<View>(R.id.cv_btn_ok)
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnOk.setOnClickListener {
+            action()
+            dialog.dismiss()
+        }
         dialog.show()
     }
 
@@ -304,154 +201,6 @@ object DialogUtils {
             { _, _ -> action() }
         )
         dialog.show()
-    }
-
-    suspend fun dailyLoginReward(
-        context: Context,
-        firebaseRepo: FirestoreRepo,
-        creditsTextView: TextView?,
-        setIsRewardPopupShown: (Boolean) -> Unit,
-        isRewardPopupShown: Boolean,
-        isDailyLoginRewardRunning: Boolean
-    ) {
-        if (isRewardPopupShown || isDailyLoginRewardRunning) return
-
-        val calendar = Calendar.getInstance()
-        val year = calendar[Calendar.YEAR]
-        val month = calendar[Calendar.MONTH] + 1
-        val day = calendar[Calendar.DAY_OF_MONTH]
-        val todayString = String.format("%04d%02d%02d", year, month, day)
-
-        val lastLoginDay = firebaseRepo.dailyLoginDay.first()
-        Log.i("lastLoginDay.first()", lastLoginDay)
-
-        var isOldDate = false
-        val lastLoginDate = try {
-            if (lastLoginDay.isNotEmpty()) {
-                SimpleDateFormat("yyyyMMdd", Locale.getDefault()).parse(lastLoginDay)
-            } else {
-                null
-            }
-        } catch (e: ParseException) {
-            FirebaseCrashlytics.getInstance().recordException(e)
-            Log.e("lastLoginDate", "Error parsing date: $e")
-            isOldDate = true
-            null
-        }
-
-        if (lastLoginDay.isEmpty() || isOldDate || lastLoginDate == null) {
-            // New user or old date format, show the reward popup
-            Log.i("showrewardpopup", "isempty or old date format")
-            Log.i("lastLoginDay", lastLoginDay)
-            showRewardPopup(
-                context,
-                firebaseRepo,
-                creditsTextView,
-                setIsRewardPopupShown,
-                isRewardPopupShown
-            )
-            if (isOldDate) {
-                // Delete the old date
-                Log.i("showrewardpopup", "isOldDate")
-                firebaseRepo.setDailyLoginDay("ddd")
-            }
-        } else {
-            val currentDate = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).parse(todayString)
-            val diffInMillis = currentDate!!.time - lastLoginDate.time
-            val diffInHours = TimeUnit.MILLISECONDS.toHours(diffInMillis)
-
-            if (
-                diffInHours >= 24 &&
-                isTimeAutomatic(context) &&
-                isZoneAutomatic(context) &&
-                lastLoginDay != todayString &&
-                !isRewardPopupShown
-            ) {
-                Log.i("showrewardpopup", "lastlogindate")
-                showRewardPopup(
-                    context,
-                    firebaseRepo,
-                    creditsTextView,
-                    setIsRewardPopupShown,
-                    isRewardPopupShown
-                )
-            } else {
-                Toast.makeText(
-                    context, "Você já pegou seus créditos grátis", Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-
-    private fun isTimeAutomatic(context: Context): Boolean {
-        return Settings.Global.getInt(
-            context.contentResolver,
-            Settings.Global.AUTO_TIME,
-            0
-        ) == 1
-    }
-
-    private fun isZoneAutomatic(context: Context): Boolean {
-        return Settings.Global.getInt(
-            context.contentResolver,
-            Settings.Global.AUTO_TIME_ZONE,
-            0
-        ) == 1
-    }
-
-    private fun showRewardPopup(
-        context: Context,
-        firestoreRepo: FirestoreRepo,
-        creditsTextView: TextView?,
-        setIsRewardPopupShown: (Boolean) -> Unit,
-        isRewardPopupShown: Boolean
-    ) {
-        if (isRewardPopupShown) return
-
-        setIsRewardPopupShown(true)
-
-        val calendar = Calendar.getInstance()
-        val year = calendar[Calendar.YEAR]
-        val month = calendar[Calendar.MONTH] + 1
-        val day = calendar[Calendar.DAY_OF_MONTH]
-        val todayString = String.format("%04d%02d%02d", year, month, day)
-        val walletRepo = WalletRepo()
-
-        val alertDialog = createAlertDialog(
-            context,
-            "Créditos grátis",
-            "Aperte aqui para créditos grátis",
-            "Pegar Créditos",
-            "Cancelar",
-            { _, _ ->
-                Toast.makeText(
-                    context, "Créditos grátis adicionados a sua conta!",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                val dialogScope = CoroutineScope(Dispatchers.Main)
-
-                dialogScope.launch {
-                    walletRepo.addCredits(15)
-                    firestoreRepo.setDailyLoginDay(todayString) // Update last_login_date
-                    walletRepo.getCredits().collect { updatedCredits ->
-                        Log.i("updatedCredits", updatedCredits.toString())
-                        if (creditsTextView != null) {
-                            creditsTextView.text = updatedCredits.toString()
-                        }
-                        Log.i("credits (reward)", updatedCredits.toString())
-                    }
-                }
-            },
-            { alertDialog, _ ->
-                alertDialog.dismiss()
-                setIsRewardPopupShown(false)
-            }
-        )
-        alertDialog.setOnCancelListener {
-            setIsRewardPopupShown(false)
-        }
-        alertDialog.show()
     }
 
     fun showSaveConversationDialog(
@@ -528,9 +277,7 @@ object DialogUtils {
                                     )
                                 )
                         }
-
                     }
-
                     alertDialog.show()
                 }
             }

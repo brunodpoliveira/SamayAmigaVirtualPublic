@@ -7,6 +7,8 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
@@ -32,7 +34,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
-import kotlin.math.log
 
 class FirestoreRepo {
 
@@ -52,9 +53,6 @@ class FirestoreRepo {
     private val _subscriptionStatus = MutableStateFlow("NENHUMA")
     val subscriptionStatus: Flow<String> = _subscriptionStatus.asStateFlow()
 
-    private val _credits = MutableStateFlow(0)
-    val credits: Flow<Int> = _credits.asStateFlow()
-
     private val _totalMsgs = MutableStateFlow(0)
     val totalMsgs: Flow<Int> = _totalMsgs.asStateFlow()
 
@@ -63,9 +61,6 @@ class FirestoreRepo {
 
     private val _textToSpeech = MutableStateFlow(false)
     val textToSpeech: Flow<Boolean> = _textToSpeech.asStateFlow()
-
-    private val _dailyLoginDay = MutableStateFlow("")
-    val dailyLoginDay: Flow<String> = _dailyLoginDay.asStateFlow()
 
     val _fontSize = MutableStateFlow(20) // Assuming 20 is the default font size
 
@@ -84,16 +79,11 @@ class FirestoreRepo {
     suspend fun fetchData() {
         try {
             fetchSubscriptionStatus()
-            val initialCredits = fetchCredits()
-            _credits.value = initialCredits
-            cache.put("credits", initialCredits)
             val initialMsgs = fetchTotalMsgs()
             _totalMsgs.value = initialMsgs
             cache.put("initialMsgs", initialMsgs)
             fetchDarkMode()
-            //observeDarkMode()
             fetchTextToSpeech()
-            fetchDailyLoginReward()
             fetchFontSize()
         } catch (e: FirebaseFirestoreException) {
             crashlytics.recordException(e)
@@ -114,10 +104,6 @@ class FirestoreRepo {
                     _subscriptionStatus.value = subscriptionStatus
                     cache.put("subscriptionStatus", subscriptionStatus)
 
-                    val credits = userData.getLong("credits")?.toInt() ?: 0
-                    _credits.value = credits
-                    cache.put("credits", credits)
-
                     val totalMsgs = userData.getLong("total_messages_sent")?.toInt() ?: 0
                     _totalMsgs.value = totalMsgs
                     cache.put("totalMsgs", totalMsgs)
@@ -129,10 +115,6 @@ class FirestoreRepo {
                     val textToSpeechStatus = userData.getBoolean("text_to_speech") ?: false
                     _textToSpeech.value = textToSpeechStatus
                     cache.put("textToSpeech", textToSpeechStatus)
-
-                    val dailyLoginDay = userData.getString("daily_login_day") ?: ""
-                    _dailyLoginDay.value = dailyLoginDay
-                    cache.put("dailyLoginDay", dailyLoginDay)
 
                     val fontSize = userData.getLong("font_size")?.toInt() ?: 20
                     _fontSize.value = fontSize
@@ -146,6 +128,7 @@ class FirestoreRepo {
     }
 
     fun getUserDocument(): DocumentReference? {
+
         val currentUser = auth.currentUser
         if (currentUser == null) {
             Log.e("getUserDocument", "User not logged in")
@@ -163,6 +146,7 @@ class FirestoreRepo {
         Log.i("getUserDocument", "User document path: ${userDocument.path}")
 
         UserDocument.userDocument = userDocument
+
         return userDocument
     }
 
@@ -211,82 +195,10 @@ class FirestoreRepo {
         }
     }
 
-    suspend fun setSubscriptionStatus(newStatus: String) {
-        if (userDocument == null) {
-            getUserDocument()
-        }
-        val userDocument = userDocument
-        if (userDocument != null) {
-            try {
-                userDocument.update("subscription_status", newStatus).await()
-                cache.put("subscription_status", newStatus)
-            } catch (e: FirebaseFirestoreException) {
-                crashlytics.recordException(e)
-                Log.e("subscription_status", "Error setting subscription status", e)
-            }
-        }
-    }
-
-    private suspend fun fetchCredits(): Int {
-        if (userDocument == null) {
-            getUserDocument()
-        }
-        val userDocument = userDocument
-        if (userDocument != null) {
-            try {
-                return if (cache.containsKey("credits")) {
-                    observeCredits()
-                    cache.get("credits") as Int
-                } else {
-                    val userData = userDocument.get().await()
-                    val fetchedCredits = userData.get("credits") as? Long
-                    val credits = fetchedCredits?.toInt() ?: 0
-                    cache.put("credits", credits)
-                    observeCredits()
-                    credits
-                }
-            } catch (e: FirebaseFirestoreException) {
-                crashlytics.recordException(e)
-                Log.e("fetchCredits", "Error fetching credits", e)
-            }
-        }
-        return 0
-    }
-
-    private fun observeCredits() {
-        if (userDocument == null) {
-            getUserDocument()
-        }
-        val userDocument = userDocument
-        userDocument?.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                Log.e("observeCredits", "Error observing Credits", error)
-                return@addSnapshotListener
-            }
-            if (snapshot != null && snapshot.exists()) {
-                Log.i("observeCredits", "observeCredits no error reached and called")
-                val credits = snapshot.getLong("credits") ?: 0
-                cache.put("credits", credits)
-            }
-        }
-    }
-
-    suspend fun setCredits(newCredits: Int) {
-        if (userDocument == null) {
-            getUserDocument()
-        }
-        val userDocument = userDocument
-        if (userDocument != null) {
-            try {
-                userDocument.update("credits", newCredits).await()
-                cache.put("credits", newCredits)
-                Log.i("setCredits", "Updated cache: ${cache.get("credits")}")
-                _credits.value = newCredits
-            } catch (e: FirebaseFirestoreException) {
-                crashlytics.recordException(e)
-                Log.e("setCredits", "Error setting credits", e)
-            }
-        }
+    fun setSubscriptionStatus(newStatus: String): Task<Void> {
+        val userDocument = getUserDocument()
+        return userDocument?.update("subscription_status", newStatus) ?: Tasks.forException(
+            FirebaseFirestoreException("User document not found", FirebaseFirestoreException.Code.ABORTED))
     }
 
     //TODO modificar para ser assinatura
@@ -505,14 +417,11 @@ class FirestoreRepo {
                             "name" to user.displayName,
                             "photo_url" to user.photoUrl?.toString(),
                             "subscription_status" to "NENHUMA",
-                            "credits" to 0,
                             "total_messages_sent" to 0,
                             "dark_mode" to false,
                             "text_to_speech" to false,
-                            "daily_login_day" to "",
                             "last_active" to "",
                             "last_notification_check" to "",
-                            "last_credit_date" to "",
                             "font_size" to 20
                         )
                         userDocument.set(defaultData, SetOptions.merge()).await() // Force sync
@@ -527,41 +436,6 @@ class FirestoreRepo {
             }
         } else {
             return CoroutineScope(Dispatchers.IO).async { false }
-        }
-    }
-
-    private suspend fun fetchDailyLoginReward() {
-        if (userDocument == null) {
-            getUserDocument()
-        }
-        val userDocument = userDocument
-        if (userDocument != null) {
-            try {
-                val dailyLoginDayValue = userDocument.get().await()["daily_login_day"] as? String
-                if (dailyLoginDayValue != null) {
-                    _dailyLoginDay.value = dailyLoginDayValue
-                }
-            } catch (e: FirebaseFirestoreException) {
-                crashlytics.recordException(e)
-                Log.e("fetchDailyLoginReward", "Error fetching daily login reward", e)
-            }
-        }
-    }
-
-    suspend fun setDailyLoginDay(todayString: String) {
-        if (userDocument == null) {
-            getUserDocument()
-        }
-        val userDocument = userDocument
-        if (userDocument != null) {
-            try {
-                userDocument.update("daily_login_day", todayString).await()
-                _dailyLoginDay.value = todayString
-                Log.i("setDailyLoginDay", "Updated daily login day to $todayString")
-            } catch (e: FirebaseFirestoreException) {
-                crashlytics.recordException(e)
-                Log.e("setDailyLoginDay", "Error setting daily login day", e)
-            }
         }
     }
 
@@ -696,6 +570,4 @@ class FirestoreRepo {
             }
         }
     }
-
-
 }

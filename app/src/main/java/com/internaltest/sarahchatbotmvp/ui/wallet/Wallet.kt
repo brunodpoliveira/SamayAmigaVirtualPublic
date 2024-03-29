@@ -1,45 +1,41 @@
 package com.internaltest.sarahchatbotmvp.ui.wallet
 
 import android.annotation.SuppressLint
-import android.content.*
+import android.content.ActivityNotFoundException
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.TextView
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.Toast
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.base.BaseActivity
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.data.WalletRepo
-import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
+import com.internaltest.sarahchatbotmvp.databinding.ActivityWalletBinding
 import com.internaltest.sarahchatbotmvp.utils.DialogUtils
 import com.qonversion.android.sdk.Qonversion
-import com.qonversion.android.sdk.dto.QEntitlement
 import com.qonversion.android.sdk.dto.QonversionError
+import com.qonversion.android.sdk.dto.QonversionErrorCode
+import com.qonversion.android.sdk.dto.entitlements.QEntitlement
 import com.qonversion.android.sdk.dto.offerings.QOfferings
 import com.qonversion.android.sdk.dto.products.QProduct
 import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
 import com.qonversion.android.sdk.listeners.QonversionOfferingsCallback
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class Wallet : BaseActivity() {
+    private lateinit var binding: ActivityWalletBinding
     private lateinit var firestoreRepo: FirestoreRepo
-    private val credits: Flow<Int> by lazy { firestoreRepo.credits }
-    private val subscription: Flow<String> by lazy { firestoreRepo.subscriptionStatus }
-    private var subscriptionHeadTextView: TextView? = null
-    private var creditsHeadTextView: TextView? = null
-    var subscriptionTextView: TextView? = null
-    var creditsTextView: TextView? = null
-    private var btnReturn: TextView? = null
-    private var checkAndCancelOfferingButton: TextView? = null
 
     private val packageNameLink = "com.internaltest.sarahchatbotmvp"
 
@@ -49,47 +45,75 @@ class Wallet : BaseActivity() {
 
     private fun loadFirestoreInfo() {
         lifecycleScope.launch {
-            walletRepo.getCredits().flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
-                .collect { credits ->
-                    with(creditsTextView) { this?.text = credits.toString() }
-                    Log.i("credits (load data store)", credits.toString())
-                }
-        }
-
-        // Observe subscription status changes
-        firestoreRepo.subscriptionStatus.asLiveData().distinctUntilChanged().observe(this)
-        { subscription ->
-            with(subscriptionTextView) { this?.text = subscription }
-            Log.i("subscription (load data store)", subscription)
-        }
-        lifecycleScope.launch {
             firestoreRepo.fetchData()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_wallet)
+        binding = ActivityWalletBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         initializeWalletRepo()
         firestoreRepo = FirestoreRepo()
         walletRepo.checkAndSwitchEntitlements(this)
-        creditsHeadTextView = findViewById(R.id.creditsHead)
-        subscriptionHeadTextView = findViewById(R.id.subscriptionHead)
-        btnReturn = findViewById(R.id.goBack)
-        checkAndCancelOfferingButton = findViewById(R.id.itemCancel)
-        with(btnReturn) { this?.setOnClickListener { gotoMainActivity() } }
-        with(checkAndCancelOfferingButton) { this?.setOnClickListener { openPlaystoreAccount() } }
+
+        configScrollToView()
+        firestoreRepo = FirestoreRepo()
         uiOfferings()
-        if (intent.getBooleanExtra("SHOW_BUY_CREDITS", false)) {
-            purchaseBuyCreditsOfferings()
-        }
         loadFirestoreInfo()
+        binding.imgBtnBack.setOnClickListener {
+           onBackPressedDispatcher.onBackPressed()
+        }
+        firestoreRepo.subscriptionStatus.asLiveData().distinctUntilChanged().observe(this)
+        { subscription ->
+            if (subscription != null) {
+                when (subscription) {
+                    "BASICO" -> {
+                        binding.ctaSejaPremium.visibility = GONE
+                        binding.cvBtnShopBronze.background = getDrawable(R.drawable.bg_corner_disable)
+                        binding.tvBtnShopBronze.text = "Plano assinado"
+                        binding.tvGerenciarAssinaturaBronze.visibility = VISIBLE
+                        binding.tvGerenciarAssinaturaBronze.setOnClickListener { openPlaystoreAccount() }
+                    }
+                    "MEDIO" -> {
+                        binding.ctaSejaPremium.visibility = GONE
+                        binding.cvBtnShopPrata.background = getDrawable(R.drawable.bg_corner_disable)
+                        binding.tvBtnShopPrata.text = "Plano assinado"
+                        binding.tvGerenciarAssinaturaPrata.visibility = VISIBLE
+                        binding.tvGerenciarAssinaturaPrata.setOnClickListener { openPlaystoreAccount() }
+                    }
+                    "AVANCADO" -> {
+                        binding.ctaSejaPremium.visibility = GONE
+                        binding.cvBtnShopOuro.background = getDrawable(R.drawable.bg_corner_disable)
+                        binding.tvBtnShopOuro.text = "Plano assinado"
+                        binding.tvGerenciarAssinaturaOuro.visibility = VISIBLE
+                        binding.tvGerenciarAssinaturaOuro.setOnClickListener { openPlaystoreAccount() }
+                    }
+                    "PREMIUM" -> {
+                        binding.ctaSejaPremium.visibility = GONE
+                        binding.cvBtnShopDiamante.background = getDrawable(R.drawable.bg_corner_disable)
+                        binding.tvBtnShop.text = "Plano assinado"
+                        binding.tvGerenciarAssinaturaDiamante.visibility = VISIBLE
+                        binding.tvGerenciarAssinaturaDiamante.setOnClickListener { openPlaystoreAccount() }
+                    }
+                }
+            }
+        }
+        checkForActiveSubscription()
     }
 
-    private fun gotoMainActivity() {
-        val intent = Intent(this@Wallet, MainActivity::class.java)
-        startActivity(intent)
+    private fun configScrollToView() {
+        val scrollView = binding.scrollView
+        binding.cvBtnSejaPremium.setOnClickListener {
+            val cardViewPosicao = IntArray(2)
+            binding.textView8.getLocationOnScreen(cardViewPosicao)
+            scrollView.post {
+                scrollView.smoothScrollTo(0, cardViewPosicao[1] - 82)
+            }
+        }
+
     }
+
 
     private fun openPlaystoreAccount() {
         try {
@@ -106,11 +130,13 @@ class Wallet : BaseActivity() {
         }
     }
 
-    @Deprecated("update")
-    override fun onBackPressed() {
-        super.onBackPressed()
-        Toast.makeText(applicationContext,
-            "Botão voltar desligado. Use as opções do menu", Toast.LENGTH_LONG).show()
+    private fun checkForActiveSubscription() {
+        walletRepo.checkAndSwitchEntitlements(this) { entitlements ->
+            if (walletRepo.hasActiveSubscription(entitlements)) {
+                Toast.makeText(this, "Você tem uma assinatura ativa. Cancele-a primeiro antes de fazer outra assinatura.",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun uiOfferings() {
@@ -118,46 +144,53 @@ class Wallet : BaseActivity() {
             @SuppressLint("SetTextI18n")
             override fun onSuccess(offerings: QOfferings) {
                 val mainOffering = offerings.main
-                val gpt4Offering = offerings.offeringForID("gpt4_offering")
-                val buyCreditsOffering = offerings.offeringForID("buy_credits_offering")
+                val bronzeOffering = offerings.offeringForID("bronze_entitlement")
+                val prataOffering = offerings.offeringForID("prata_entitlement")
+                val ouroOffering = offerings.offeringForID("ouro_entitlement")
+                val diamanteOffering = offerings.offeringForID("diamante_entitlement")
 
                 if (mainOffering != null && mainOffering.products.isNotEmpty()) {
-                    Log.i("test offerings", mainOffering.products.toString())
-                    subscriptionTextView = findViewById(R.id.subscriptionStatus)
-                    subscriptionTextView?.text = subscription.toString()
-                    creditsTextView = findViewById(R.id.creditsCount)
-                    creditsTextView?.text = credits.toString()
-                    Log.i("credits text view", creditsTextView.toString())
 
-                    val gpt4OfferingTextView = findViewById<TextView>(R.id.itemNameGPT4Offering)
-                    val buyCreditsTextView = findViewById<TextView>(R.id.itemName)
+                    val tvPriceBronze = binding.tvValorBronze
+                    val tvPricePrata = binding.tvValorPrata
+                    val tvPriceOuro = binding.tvValorOuro
 
-                    val gpt4OfferingButton = findViewById<Button>(R.id.itemPriceGPT4Offering)
-                    val buyCreditsButton = findViewById<Button>(R.id.itemPrice)
-
-                    val gpt4OfferingDescriptionTextView =
-                        findViewById<TextView>(R.id.itemDescriptionGPT4Offering)
-                    val buyCreditsDescriptionTextView = findViewById<TextView>(R.id.itemDescription)
-
-                    val gpt4OfferingInfo = gpt4Offering?.products?.get(0)
-                    val buyCreditsInfo = buyCreditsOffering?.products?.get(0)
-
-                    gpt4OfferingTextView.text = gpt4OfferingInfo?.skuDetail!!.title
-                    buyCreditsTextView.text = buyCreditsInfo?.skuDetail!!.title
-
-                    gpt4OfferingButton.text = gpt4OfferingInfo.skuDetail!!.price
-                    buyCreditsButton.text = buyCreditsInfo.skuDetail!!.price
-
-                    gpt4OfferingDescriptionTextView.text = gpt4OfferingInfo.skuDetail!!.description
-                    buyCreditsDescriptionTextView.text = buyCreditsInfo.skuDetail!!.description
-
-                    gpt4OfferingButton.setOnClickListener {
-                        purchaseOffering(this@Wallet, gpt4Offering.products[0])
-                        DialogUtils.showSubscriptionWarningPopup(this@Wallet)
-
+                    bronzeOffering?.products?.get(0)?.let {
+                        tvPriceBronze.text = it.prettyPrice
+                        binding.cvBtnShopBronze.setOnClickListener {
+                            DialogUtils.showSubscriptionWarningPopup(this@Wallet, action = {
+                                purchaseOffering(this@Wallet, bronzeOffering.products[0])
+                            })
+                        }
                     }
-                    buyCreditsButton.setOnClickListener {
-                        purchaseOffering(this@Wallet, buyCreditsOffering.products[0])
+
+                    prataOffering?.products?.get(0)?.let {
+                        tvPricePrata.text = it.prettyPrice
+                        binding.cvBtnShopPrata.setOnClickListener {
+                            DialogUtils.showSubscriptionWarningPopup(this@Wallet, action = {
+                                purchaseOffering(this@Wallet, prataOffering.products[0])
+                            })
+                        }
+                    }
+
+                    ouroOffering?.products?.get(0)?.let {
+                        tvPriceOuro.text = it.prettyPrice
+                        binding.cvBtnShopOuro.setOnClickListener {
+                            DialogUtils.showSubscriptionWarningPopup(this@Wallet, action = {
+                                purchaseOffering(this@Wallet, ouroOffering.products[0])
+                            })
+                        }
+                    }
+
+                    diamanteOffering?.products?.get(0)?.let {
+
+                        binding.textView11.text = "*:Grátis por 7 dias e depois ${it.prettyPrice}/mês. Renovado Automaticamente." +
+                                "\nCancele quando quiser"
+                        binding.cvBtnShopDiamante.setOnClickListener {
+                            DialogUtils.showSubscriptionWarningPopup(this@Wallet, action = {
+                                purchaseOffering(this@Wallet, diamanteOffering.products[0])
+                            })
+                        }
                     }
                 }
             }
@@ -168,54 +201,70 @@ class Wallet : BaseActivity() {
     }
 
     fun purchaseOffering(context: Context, qProduct: QProduct) {
-        Qonversion.shared.checkEntitlements(object: QonversionEntitlementsCallback {
+        walletRepo.checkAndSwitchEntitlements(this) { entitlements ->
+            if (walletRepo.hasActiveSubscription(entitlements)) {
+                Toast.makeText(context, "Você já possui uma assinatura ativa. Por favor, cancele a atual antes de adquirir uma nova.",
+                    Toast.LENGTH_LONG).show()
+            } else {
+                performPurchase(context, qProduct)
+            }
+        }
+    }
+
+    private fun performPurchase(context: Context, qProduct: QProduct) {
+        //TODO testar teste grátis
+        val offerID = if (qProduct.offeringID ==
+            "assinatura_diamante") "assinatura_diamante-teste-gratis" else null
+        val purchaseModel = if(offerID != null) qProduct.toPurchaseModel(offerID)
+        else qProduct.toPurchaseModel()
+
+        Qonversion.shared.purchase(this@Wallet, purchaseModel, callback = object:
+            QonversionEntitlementsCallback {
             override fun onSuccess(entitlements: Map<String, QEntitlement>) {
-                if (walletRepo.hasActiveSubscription(entitlements)) {
-                    Toast.makeText(context,
-                        "Você tem uma assinatura ativa. " +
-                                "Cancele-a primeiro antes de fazer outra assinatura.",
-                        Toast.LENGTH_LONG).show()
-                } else{
-                    Qonversion.shared.purchase(this@Wallet, qProduct,
-                        callback = object: QonversionEntitlementsCallback {
-                        override fun onSuccess(entitlements: Map<String, QEntitlement>) {
-                            Log.i("qproduct", qProduct.toString())
-
-                            if (qProduct.storeID == "assinatura_gpt4"
-                                || qProduct.qonversionID == "assinatura_gpt4") {
-                                walletRepo.updateGPT4Entitlement(context)
-                            }
-
-                            if (qProduct.storeID == "buy_credits"
-                                || qProduct.qonversionID == "buy_credits")
-                            {
-                                walletRepo.addCredits(75)
-                            }
-                        }
-                        override fun onError(error: QonversionError) {
-                            Log.d(ContentValues.TAG, "onError: ${error.description}")
-                        }
-                    })
+                val entitlementToUpdate = when (qProduct.offeringID) {
+                    "bronze_entitlement" -> entitlements["bronze_entitlement"]
+                    "prata_entitlement" -> entitlements["prata_entitlement"]
+                    "ouro_entitlement" -> entitlements["ouro_entitlement"]
+                    "diamante_entitlement" -> entitlements["diamante_entitlement"]
+                    else -> null
+                }
+                if (entitlementToUpdate != null && entitlementToUpdate.isActive) {
+                    qProduct.offeringID?.let { updateSubscriptionEntitlement(context, it) }
                 }
             }
+
             override fun onError(error: QonversionError) {
-                Log.d(ContentValues.TAG, "onError: ${error.description}")
+                if (error.code == QonversionErrorCode.CanceledPurchase) {
+                    Toast.makeText(context, "Compra cancelada", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Erro na compra: ${error.description}",
+                        Toast.LENGTH_LONG).show()
+                }
             }
         })
     }
 
-    private fun purchaseBuyCreditsOfferings() {
-        Qonversion.shared.offerings(object: QonversionOfferingsCallback {
-            override fun onSuccess(offerings: QOfferings) {
-                val buyCreditsOffering = offerings.offeringForID("buy_credits_offering")
-                buyCreditsOffering?.let {
-                    purchaseOffering(this@Wallet,it.products[0])
-                }
-            }
+    fun updateSubscriptionEntitlement(context: Context, entitlementId: String) {
+        val status = when (entitlementId) {
+            "bronze_entitlement" -> "BASICO"
+            "prata_entitlement" -> "MEDIO"
+            "ouro_entitlement" -> "AVANCADO"
+            "diamante_entitlement" -> "PREMIUM"
+            else -> throw IllegalArgumentException("Unknown entitlement ID")
+        }
 
-            override fun onError(error: QonversionError) {
-                Log.d(ContentValues.TAG, "onError: ${error.description}")
+        CoroutineScope(Dispatchers.Main).launch {
+            firestoreRepo.setSubscriptionStatus(status).addOnSuccessListener {
+                lifecycleScope.launch {
+                    walletRepo.setSubscriptionStatus(status)
+                }
+            }.addOnFailureListener { exception ->
+                Toast.makeText(
+                    context,
+                    "Falha na atualização da assinatura: ${exception.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-        })
+        }
     }
 }

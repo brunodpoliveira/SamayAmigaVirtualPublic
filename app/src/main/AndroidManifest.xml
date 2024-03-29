@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.INTERNET"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -9,16 +12,23 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
-    <uses-feature android:glEsVersion="0x00020000"
-        android:required="true"/>
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
     <application
         android:name=".QonversionApp"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="Samay - Amiga Virtual"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:replace="android:label">
+        <activity
+            android:name=".ui.config.main.ConfigActivity"
+            android:exported="false" />
+
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
@@ -26,26 +36,36 @@
             android:name="firebase_performance_logcat_enabled"
             android:value="true" />
 
-        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
 
         <activity android:name=".ui.main.MainActivity" />
         <activity
-            android:name=".auth.SignIn"
-            android:theme="@style/AppTheme"
-            android:exported="true">
+            android:name=".Splash"
+            android:exported="true"
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".auth.SignIn"
+            android:exported="true"
+            android:theme="@style/AppTheme" />
         <activity android:name=".ui.wallet.Wallet" />
-        <receiver android:name=".utils.AlarmNotificationReceiver"
+
+        <receiver
+            android:name=".utils.AlarmNotificationReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
         <service
             android:name=".data.MyFirebaseMessagingService"
             android:exported="false">
@@ -54,4 +74,5 @@
             </intent-filter>
         </service>
     </application>
+
 </manifest>

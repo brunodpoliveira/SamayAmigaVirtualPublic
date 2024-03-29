@@ -1,10 +1,14 @@
 package com.internaltest.sarahchatbotmvp.utils
 
+import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.provider.Settings
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -16,6 +20,19 @@ object NotificationScheduler {
     const val INACTIVE_REQUEST_CODE = 102
     private const val INACTIVE_WORK_TAG = "InactiveNotificationWork"
     const val XMAS_REQUEST_CODE = 103
+
+    fun checkAndRequestScheduleExactAlarmPermission(activity: Activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val alarmManager = ContextCompat.getSystemService(activity, AlarmManager::class.java)
+            if (alarmManager?.canScheduleExactAlarms() == false) {
+                Toast.makeText(activity, "Precisamos de sua permissão" +
+                        "para você receber notificações!", Toast.LENGTH_LONG).show()
+
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                activity.startActivity(intent)
+            }
+        }
+    }
 
     fun scheduleDailyNotification(context: Context) {
         scheduleNotification(context, DAILY_REQUEST_CODE, 1, TimeUnit.DAYS)

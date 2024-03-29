@@ -1,6 +1,7 @@
 package com.internaltest.sarahchatbotmvp.data
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,7 +18,11 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.internaltest.sarahchatbotmvp.auth.SignIn
+import com.internaltest.sarahchatbotmvp.data.Utils.messageList
+import com.internaltest.sarahchatbotmvp.data.Utils.msgs
+import com.internaltest.sarahchatbotmvp.data.Utils.userId
 import com.internaltest.sarahchatbotmvp.models.Conversation
+import com.internaltest.sarahchatbotmvp.models.Message
 import com.internaltest.sarahchatbotmvp.ui.main.MainActivity
 import com.internaltest.sarahchatbotmvp.utils.DialogUtils
 import com.internaltest.sarahchatbotmvp.utils.FirebaseInstance
@@ -28,7 +33,7 @@ import java.io.FileOutputStream
 import java.time.LocalTime
 
 class SaveLoadConversationManager(
-    private val mainActivity: MainActivity,
+    private val activity: Activity,
     private val context: Context,
 
 ) {
@@ -49,7 +54,7 @@ class SaveLoadConversationManager(
 
             if (deniedPermissions.isNotEmpty()) {
                 ActivityCompat.requestPermissions(
-                    mainActivity,
+                    activity,
                     deniedPermissions,
                     REQUEST_CODE_PERMISSIONS
                 )
@@ -65,13 +70,13 @@ class SaveLoadConversationManager(
 
             if (!permissionGranted) {
                 // Show explanation if needed
-                if (ActivityCompat.shouldShowRequestPermissionRationale(mainActivity, permission)) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
                     // Show an explanation to the user asynchronously if needed
                     // e.g., using a dialog or a snackbar
                 } else {
                     // Request the permission directly
                     ActivityCompat.requestPermissions(
-                        mainActivity,
+                        activity,
                         arrayOf(permission),
                         REQUEST_CODE_PERMISSIONS
                     )
@@ -83,7 +88,7 @@ class SaveLoadConversationManager(
     fun saveConversationOnClick(userName: String, userId: String, exit : Boolean = false) {
         checkAndRequestPermissions()
 
-        val conversation = Conversation(userName, mainActivity.messageList, userId)
+        val conversation = Conversation(userName, messageList, userId)
         if (userName.isBlank()) return
         DialogUtils.showSaveConversationDialog(
             context,
@@ -97,7 +102,7 @@ class SaveLoadConversationManager(
         if (isFromNuvem) {
             //carregar do firebase
             val firebaseDatabase = FirebaseInstance.firebaseDatabase
-            val conversationsRef = firebaseDatabase.getReference("conversations/${mainActivity.userId.toString()}")
+            val conversationsRef = firebaseDatabase.getReference("conversations/${userId.toString()}")
             conversationsRef.get().addOnSuccessListener { dataSnapshot ->
                 if (dataSnapshot.exists()) {
                     val conversationList = dataSnapshot.children.map { it.getValue(Conversation::class.java)!! }
@@ -139,7 +144,7 @@ class SaveLoadConversationManager(
     fun loadConversation(isFromNuvem: Boolean) {
         if (isFromNuvem) {
             //carregar do firebase
-            val conversationsRef = FirebaseInstance.firebaseDatabase.getReference("conversations/${mainActivity.userId.toString()}")
+            val conversationsRef = FirebaseInstance.firebaseDatabase.getReference("conversations/${userId.toString()}")
             conversationsRef.get().addOnSuccessListener { dataSnapshot ->
                 if (dataSnapshot.exists()) {
                     val conversation = dataSnapshot.getValue(Conversation::class.java)
@@ -192,16 +197,20 @@ class SaveLoadConversationManager(
             val gson = Gson()
             val conversation = gson.fromJson(jsonString, Conversation::class.java)
 
-            mainActivity.messageList.clear()
-            mainActivity.messageList.addAll(conversation.messages)
-            mainActivity.msgs.clear()
-            mainActivity.msgs.addAll(conversation.messages.map {
+            val messages = conversation.messages as MutableList<Message>
+            val data = conversation.dataCriada.toString()
+            messages.add(0, Message(data, data = data))
+            messageList.clear()
+            messageList.addAll(messages)
+            msgs.clear()
+            msgs.addAll(conversation.messages.map {
                 ChatMessage(if (it.isReceived) "assistant" else "user", it.message)
             })
-            mainActivity.onConversationDataLoaded()
-
-            Log.i("handleLoadedConversation", "Loaded messages: ${mainActivity.messageList.joinToString { it.toString() }}")
-            mainActivity.chatAdapter?.notifyDataSetChanged()
+            msgs.add(0, ChatMessage("data", data))
+//            activity.onConversationDataLoaded()
+//
+//            Log.i("handleLoadedConversation", "Loaded messages: ${activity.messageList.joinToString { it.toString() }}")
+//            activity.chatAdapter?.notifyDataSetChanged()
             Toast.makeText(context, "Conversa carregada", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             FirebaseCrashlytics.getInstance().recordException(e)
@@ -211,16 +220,18 @@ class SaveLoadConversationManager(
 
     private fun handleLoadedObjectConversation(conversation: Conversation) {
         try {
-            mainActivity.messageList.clear()
-            mainActivity.messageList.addAll(conversation.messages)
+            val messages = conversation.messages as MutableList<Message>
+            val data = conversation.dataCriada.toString()
+            messages.add(0, Message(data, data = data))
+            messageList.clear()
+            messageList.addAll(messages)
 
-            mainActivity.msgs.clear()
-            mainActivity.msgs.addAll(conversation.messages.map {
+            msgs.clear()
+            msgs.addAll(conversation.messages.map {
                 ChatMessage(if (it.isReceived) "assistant" else "user", it.message)
             })
-            Log.i("handleLoadedObjectConversation", "Loaded messages: ${mainActivity.messageList.joinToString { it.toString() }}")
-            mainActivity.chatAdapter?.notifyDataSetChanged()
-            mainActivity.onConversationDataLoaded()
+            msgs.add(0, ChatMessage("data", data))
+            Log.i("handleLoadedObjectConversation", "Loaded messages: ${messageList.joinToString { it.toString() }}")
             Toast.makeText(context, "Conversa carregada", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             FirebaseCrashlytics.getInstance().recordException(e)
@@ -239,16 +250,15 @@ class SaveLoadConversationManager(
         conversation.horaCriada = LocalTime.now().toString()
 
         val firebaseDatabase = FirebaseDatabase.getInstance()
-        val reportsRef = firebaseDatabase.getReference("reports/${mainActivity.userId.toString()}")
+        val reportsRef = firebaseDatabase.getReference("reports/${userId.toString()}")
         val reportRef = reportsRef.push()
         reportRef.setValue(conversation)
             .addOnSuccessListener {
                 val reportId = reportRef.key
                 Toast.makeText(context, "Report salvo com sucesso!", Toast.LENGTH_SHORT).show()
                 Log.d("saveReportConversation", "Report salvo no Firebase com ID: $reportId")
-                mainActivity.messageList.clear()
-                mainActivity.chatAdapter?.notifyDataSetChanged()
-                mainActivity.addInitialMessage()
+               messageList.clear()
+
             }
             .addOnFailureListener {
                 Log.d("saveReportConversation", it.toString())
@@ -272,7 +282,7 @@ class SaveLoadConversationManager(
         conversation.horaCriada = LocalTime.now().toString()
         if (saveRemote) {
             val firebaseDatabase = FirebaseInstance.firebaseDatabase
-            val conversationsRef = firebaseDatabase.getReference("conversations/${mainActivity.userId.toString()}")
+            val conversationsRef = firebaseDatabase.getReference("conversations/${userId.toString()}")
             val conversationRef = conversationsRef.push()
             conversationRef.setValue(conversation)
                 .addOnSuccessListener {
@@ -283,7 +293,7 @@ class SaveLoadConversationManager(
                         val intent = Intent(context, SignIn::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                         FirebaseAuth.getInstance().signOut()
-                        mainActivity.startActivity(intent)
+                        activity.startActivity(intent)
                     }
                 }
                 .addOnFailureListener {
@@ -315,7 +325,7 @@ class SaveLoadConversationManager(
                     val intent = Intent(context, SignIn::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                     FirebaseAuth.getInstance().signOut()
-                    mainActivity.startActivity(intent)
+                    activity.startActivity(intent)
                 }
             } catch (e: Exception) {
                 FirebaseCrashlytics.getInstance().recordException(e)
@@ -337,7 +347,7 @@ class SaveLoadConversationManager(
     }
 
     fun deleteConversationFolder() {
-        val conversationsRef = FirebaseInstance.firebaseDatabase.getReference("conversations/${mainActivity.userId.toString()}")
+        val conversationsRef = FirebaseInstance.firebaseDatabase.getReference("conversations/${userId.toString()}")
         conversationsRef.removeValue()
             .addOnSuccessListener {
                 // Folder deleted successfully

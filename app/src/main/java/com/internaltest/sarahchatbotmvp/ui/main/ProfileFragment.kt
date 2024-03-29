@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,18 +17,17 @@ import android.widget.Toast
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.internaltest.sarahchatbotmvp.R
 import com.internaltest.sarahchatbotmvp.auth.SignIn
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.data.SaveLoadConversationManager
+import com.internaltest.sarahchatbotmvp.data.Utils
 import com.internaltest.sarahchatbotmvp.ui.wallet.Wallet
 import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showDeleteAccountConfirmationDialog
 import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showLoadConversationDialog
@@ -123,11 +121,11 @@ class ProfileFragment : Fragment() {
                 conversationManager::loadConversationOnClick)
         }
 
-        parentFragment?.view?.findViewById<NavigationView>(R.id.navigation_view)?.apply {
-            val topPadding = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 144f, resources.displayMetrics).toInt()
-            setPadding(paddingLeft, topPadding, paddingRight, paddingBottom)
-        }
+//        parentFragment?.view?.findViewById<NavigationView>(R.id.navigation_view)?.apply {
+//            val topPadding = TypedValue.applyDimension(
+//                TypedValue.COMPLEX_UNIT_DIP, 144f, resources.displayMetrics).toInt()
+//            setPadding(paddingLeft, topPadding, paddingRight, paddingBottom)
+//        }
 
         toggleDarkSwitch = view.findViewById(R.id.toggleDarkSwitch)
         CoroutineScope(Dispatchers.Main).launch {
@@ -196,12 +194,12 @@ class ProfileFragment : Fragment() {
     private fun observeTextToSpeech() {
         firestoreRepo.textToSpeech.asLiveData().observe(viewLifecycleOwner) { textToSpeechEnabled ->
             textToSpeechSwitch?.isChecked = textToSpeechEnabled
-            if (textToSpeechEnabled && mainActivity.textToSpeechInitialized) {
-                mainActivity.textToSpeech.language = Locale("pt", "BR")
-                lifecycleScope.launch {
-                    mainActivity.speakText("Texto para Fala Ativado")
-                }
-            }
+//            if (textToSpeechEnabled && mainActivity.textToSpeechInitialized) {
+//                mainActivity.textToSpeech.language = Locale("pt", "BR")
+//                lifecycleScope.launch {
+//                    mainActivity.speakText("Texto para Fala Ativado")
+//                }
+//            }
         }
     }
 
@@ -250,6 +248,7 @@ class ProfileFragment : Fragment() {
             }
             try {
                 if (account != null) {
+                    account.photoUrl?.let { Utils.imageProfile = it }
                     Glide.with(this).load(account.photoUrl).into(profileImage!!)
                 }
             } catch (e: NullPointerException) {

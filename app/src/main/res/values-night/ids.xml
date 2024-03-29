@@ -7,11 +7,23 @@
     <item name="itemDescription" type="id" />
     <item name="itemCancel" type="id" />
     <item name="itemCancel2" type="id" />
-    <item name="creditsCount" type="id" />
     <item name="subscriptionHead" type="id" />
     <item name="itemNameGPT4Offering" type="id" />
     <item name="itemPriceGPT4Offering" type="id" />
     <item name="itemDescriptionGPT4Offering" type="id" />
     <item name="firebaseId" type="id" />
     <item name="clear_cache" type="id" />
+    <item name="drawer_layout" type="id" />
+    <item name="itemNameBronze" type="id" />
+    <item name="itemNamePrata" type="id" />
+    <item name="itemNameOuro" type="id" />
+    <item name="itemNameDiamante" type="id" />
+    <item name="itemPriceBronze" type="id" />
+    <item name="itemPricePrata" type="id" />
+    <item name="itemPriceOuro" type="id" />
+    <item name="itemPriceDiamante" type="id" />
+    <item name="itemDescriptionBronze" type="id" />
+    <item name="itemDescriptionPrata" type="id" />
+    <item name="itemDescriptionOuro" type="id" />
+    <item name="itemDescriptionDiamante" type="id" />
 </resources>

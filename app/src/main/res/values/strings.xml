@@ -2,16 +2,6 @@
     <string name="app_name">Samay - Amiga Virtual</string>
     <string name="digite_mensagem_aqui">Digite mensagem aqui</string>
     <string name="modo_escuro">Modo Escuro</string>
-    <string name="sign_in_text">🥳 Olá! Boas Vindas ao app Samay!\n
-        💌 Conversas encantadoras e um(a) amigo(a) alimentado(a) por inteligência artificial estão a
-        apenas um login de distância.\n
-        🤗 Com nossa interface fácil de usar e um chatbot que te entende,
-        Samay é seu aplicativo ideal para encontrar entretenimento e conversas envolventes.\n
-        💫 Samay vai te ajudar a descascar o abacaxi da vida.\n
-        🌟 Faça login abaixo para liberar a magia, mas antes, dê uma olhada na nossa
-        Política de Privacidade e Termos de Uso.\n
-        ⛔ Se encontrar algum problema, por favor, relate para teqbot.io59@gmail.com.\n
-    </string>
     <string name="name">Nome</string>
     <string name="email">Email</string>
     <string name="id">id</string>
@@ -24,14 +14,12 @@
     <string name="button">Button</string>
     <string name="textview2">TextView</string>
     <string name="checkAndCancelOffering">Checar/Cancelar Assinatura</string>
-    <string name="credits">Créditos:</string>
-    <string name="subscription">Assinatura:</string>
-    <string name="creditsCount">0</string>
+    <string name="subscription">Assinatura: </string>
     <string name="subscriptionStatusText">Sem inscrição</string>
     <string name="dailyReward">Recompensa diária</string>
     <string name="goToProfileActivity">Voltar</string>
     <string name="btnShop">Compre mais créditos aqui</string>
-    <string name="deleteAccount">Deletar Conta e Info</string>
+    <string name="deleteAccount">Deletar conta e info</string>
     <string name="clear_cache">Resolver problemas do App</string>
     <string name="fala_p_texto">Aperte o botão abaixo e fale</string>
     <string name="id_google_sub">Id Google</string>
@@ -41,6 +29,28 @@
     <string name="font_size_sub_text">Tamanho da Fonte</string>
     <string name="min_value_txt">10</string>
     <string name="max_value_txt">40</string>
-    <string name="save_convo_txt">Salvar Conversa</string>
-    <string name="load_convo_txt">Carregar Conversa</string>
+    <string name="save_convo_txt">Salvar conversa</string>
+    <string name="load_convo_txt">Carregar conversa</string>
+    <string name="login_cta">Faça login abaixo para\nliberar a magia</string>
+    <string name="login_google">Fazer login com Google</string>
+    <string name="txt_privacy"><u>Política de Privacidade</u></string>
+    <string name="termos_de_uso"><u>Termos de Uso</u></string>
+    <string name="gravando_audio">Gravando áudio…</string>
+    <string name="ajustes">Ajustes</string>
+    <string name="cta_text">Clique aqui para obter ou gerenciar assinaturas</string>
+    <string name="carregando_mensagem">Carregando Mensagem…</string>
+    <string name="ajuda">Ajuda</string>
+    <string name="fale_conosco">Fale conosco</string>
+    <string name="denunciar_conversa">Denunciar conversa</string>
+    <string name="assinatura">Assinatura</string>
+    <string name="txt_description_signature">Use a <b>Inteligência Artificial mais avançada do mundo</b>, a GPT4.</string>
+    <string name="signature_promotion">Mensagens ilimitadas</string>
+    <string name="assinar_plano">Assinar plano</string>
+    <string name="texto_ajuda">Seu feedback é muito importante para nós. Por favor, não hesite em falar conosco!</string>
+    <string name="planos">Planos</string>
+    <string name="seja_premium">Seja Premium</string>
+    <string name="gerenciar_assinatura"> <u>Gerenciar Assinatura</u></string>
+    <string name="cta_experimente">Experimente o\n<b>Plano Mensal Premium (R$ 29,99/mês) </b></string>
+    <string name="cta_experimente_days">grátis por 7 dias com a Samay</string>
+
 </resources>

@@ -2,7 +2,9 @@ package com.internaltest.sarahchatbotmvp.ui.main
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.os.Bundle
@@ -11,24 +13,28 @@ import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.InstallState
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.google.android.play.core.tasks.Task
@@ -42,20 +48,18 @@ import com.internaltest.sarahchatbotmvp.auth.SignIn
 import com.internaltest.sarahchatbotmvp.base.BaseActivity
 import com.internaltest.sarahchatbotmvp.data.FirestoreRepo
 import com.internaltest.sarahchatbotmvp.data.SaveLoadConversationManager
+import com.internaltest.sarahchatbotmvp.data.Utils
+import com.internaltest.sarahchatbotmvp.data.Utils.imageProfile
+import com.internaltest.sarahchatbotmvp.data.Utils.messageList
+import com.internaltest.sarahchatbotmvp.data.Utils.msgs
+import com.internaltest.sarahchatbotmvp.data.Utils.userEmail
+import com.internaltest.sarahchatbotmvp.data.Utils.userId
 import com.internaltest.sarahchatbotmvp.data.WalletRepo
-import com.internaltest.sarahchatbotmvp.models.Conversation
 import com.internaltest.sarahchatbotmvp.models.Message
 import com.internaltest.sarahchatbotmvp.ui.adapters.ChatAdapter
-import com.internaltest.sarahchatbotmvp.ui.wallet.Wallet
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.checkForUpdate
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.dailyLoginReward
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.dismissProgressDialog
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showDialogConfirmReportChat
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showDialogReportChat
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showExitDialog
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showNoCreditsAlertDialog
-import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showProgressDialog
+import com.internaltest.sarahchatbotmvp.ui.config.main.ConfigActivity
 import com.internaltest.sarahchatbotmvp.utils.DialogUtils.isProgressDialogVisible
+import com.internaltest.sarahchatbotmvp.utils.DialogUtils.showExitDialog
 import com.internaltest.sarahchatbotmvp.utils.FirebaseInstance
 import com.internaltest.sarahchatbotmvp.utils.NotificationScheduler
 import com.theokanning.openai.OpenAiHttpException
@@ -71,42 +75,54 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Duration
+import java.util.Date
 import java.util.Locale
 import java.util.Objects
 import java.util.stream.Collectors
 
 class MainActivity : BaseActivity() {
+    companion object {
+        private const val APP_UPDATE_REQUEST_CODE = 1991
+    }
+
     private lateinit var firestoreRepo: FirestoreRepo
 
     //TODO refatorar para fazer a assinatura grátis
     //private lateinit var billingManager: BillingManager
-    lateinit var textToSpeech: TextToSpeech
-    private lateinit var drawerLayout: DrawerLayout
-    private lateinit var configProfile: FloatingActionButton
+    private lateinit var textToSpeech: TextToSpeech
+    //TODO transferir lógica do In-App Update para módulo próprio
+    private val appUpdateManager: com.google.android.play.core.appupdate.AppUpdateManager by lazy { AppUpdateManagerFactory.create(this) }
+    private val appUpdatedListener: InstallStateUpdatedListener by lazy {
+        object : InstallStateUpdatedListener {
+            override fun onStateUpdate(installState: InstallState) {
+                when {
+                    installState.installStatus() == InstallStatus.DOWNLOADED -> popupSnackbarForCompleteUpdate()
+                    installState.installStatus() == InstallStatus.INSTALLED -> appUpdateManager.unregisterListener(this)
+                    else -> Log.d("InstallStateUpdatedListener: state: %s",
+                        installState.installStatus().toString()
+                    )
+                }
+            }
+        }
+    }
     private lateinit var conversationManager: SaveLoadConversationManager
 
     private var thisSessionMsgCounter = 0
     private var chatView: RecyclerView? = null
+    private var cvLoading : ConstraintLayout? = null
     var chatAdapter: ChatAdapter? = null
-    var messageList: MutableList<Message> = ArrayList()
+
     private var editMessage: EditText? = null
-    private var btnSend: ImageButton? = null
-    private var btnReport: FloatingActionButton? = null
-    private var subscriptionHeadTextView: TextView? = null
-    private var creditsHeadTextView: TextView? = null
+    private var btnSend: ConstraintLayout? = null
     private var subscriptionTextView: TextView? = null
-    private var creditsTextView: TextView? = null
-    var userId: String? = null
+
     private var userName: String? = null
-    private var isRewardPopupShown = false
-    private var isDailyLoginRewardRunning = false
-    var textToSpeechInitialized = false
-    private var speak: FloatingActionButton? = null
+    private var textToSpeechInitialized = false
+    private var speak: ConstraintLayout? = null
     private val REQUEST_CODE_SPEECH_INPUT = 1
     private var fontSizeJob: Job? = null
     private lateinit var crashlytics: FirebaseCrashlytics
-
-    val msgs: MutableList<ChatMessage> = ArrayList()
+    private lateinit var btnConfig: FloatingActionButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,15 +138,16 @@ class MainActivity : BaseActivity() {
         crashlytics = FirebaseCrashlytics.getInstance()
 
         // billingManager = FirestoreRepo().getUserId()?.let { BillingManager(this, it) }!!
-
-        btnSend = findViewById(R.id.btnSend)
-        btnReport = findViewById(R.id.btnReport)
-        chatAdapter = ChatAdapter(messageList, this)
-        chatView = findViewById(R.id.chatView)
-        with(chatView) { this?.setAdapter(chatAdapter) }
+        checkForAppUpdate()
+        btnSend = findViewById(R.id.cv_send)
+        chatAdapter = ChatAdapter(messageList)
+        chatView = findViewById(R.id.rv_messages)
+        speak = findViewById(R.id.cv_audio)
+        cvLoading = findViewById(R.id.cv_loading)
+        btnConfig = findViewById(R.id.btnConfig)
+        with(chatView) { this?.adapter = chatAdapter }
         observeFontSize()
-        addInitialMessage()
-        editMessage = findViewById(R.id.editMessage)
+        editMessage = findViewById(R.id.editTextText)
 
         //Making sure the text expands as the user types more text
         editMessage?.addTextChangedListener(object : TextWatcher {
@@ -138,6 +155,13 @@ class MainActivity : BaseActivity() {
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val textLength = s?.length ?: 0
+                if (textLength > 0) {
+                    btnSend?.visibility = View.VISIBLE
+                    speak?.visibility = View.INVISIBLE
+                } else {
+                    btnSend?.visibility = View.INVISIBLE
+                    speak?.visibility = View.VISIBLE
+                }
 
                 val initialFontSize = chatAdapter?.currentUserFontSize?.toFloat() ?: 20f
                 val newFontSize: Float = when {
@@ -155,41 +179,16 @@ class MainActivity : BaseActivity() {
                 }
                 editMessage?.textSize = newFontSize
             }
-
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        val navigationView: NavigationView = findViewById(R.id.navigation_view)
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_profile -> {
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                    true
-                }
-
-                else -> false
-            }
-        }
-
-        drawerLayout = findViewById(R.id.drawer_layout)
-        configProfile = findViewById(R.id.config)
-        configProfile.setOnClickListener {
-            // Open the drawer
-            drawerLayout.openDrawer(GravityCompat.START)
-        }
-
-        // Show the ProfileFragment inside the navigation drawer
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.profile_fragment_container, ProfileFragment())
-            .commit()
         val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(this)!!
         userId = googleSignInAccount.id
         userName = googleSignInAccount.displayName
-        creditsHeadTextView = findViewById(R.id.creditsHead)
-        subscriptionHeadTextView = findViewById(R.id.subscriptionHead)
-        creditsTextView = findViewById(R.id.creditsCount)
-        subscriptionTextView = findViewById(R.id.subscriptionStatus)
-        speak = findViewById(R.id.speak)!!
+        Utils.userName = googleSignInAccount.displayName
+        imageProfile = googleSignInAccount.photoUrl
+        userEmail = googleSignInAccount.email
+        subscriptionTextView = findViewById(R.id.subscriptionStatusText)
 
         textToSpeech = TextToSpeech(this) { status ->
             if (status != TextToSpeech.ERROR) {
@@ -252,17 +251,8 @@ class MainActivity : BaseActivity() {
         }
         walletRepo = WalletRepo()
         walletRepo.checkAndSwitchEntitlements(this)
-        CoroutineScope(Dispatchers.Main).launch {
-            dailyLoginReward(
-                this@MainActivity,
-                firestoreRepo,
-                creditsTextView,
-                { isRewardPopupShown = it },
-                isRewardPopupShown,
-                isDailyLoginRewardRunning
-            )
-        }
-        checkForUpdate(this, packageName)
+        NotificationScheduler.checkAndRequestScheduleExactAlarmPermission(this)
+
         NotificationScheduler.scheduleDailyNotification(this)
         NotificationScheduler.scheduleInactiveNotification(this)
         NotificationScheduler.scheduleXmasNotification(this)
@@ -279,17 +269,23 @@ class MainActivity : BaseActivity() {
             }
         }
 
-        btnReport?.setOnClickListener {
-            reportMessageDialog()
+        btnConfig.setOnClickListener {
+            startActivity(Intent(this, ConfigActivity::class.java))
         }
 
         btnSend?.setOnClickListener {
             val message = editMessage?.text.toString()
             if (message.isNotEmpty()) {
                 with(editMessage) { this?.setText("") }
-                checkSubscriptionAndCreditsAndStartMessageLoop(message)
+                gptMessage(message)
                 //mensagem de carregamento, que aparecerá qndo o user mandar msg
-                showProgressDialog(supportFragmentManager, "Carregando Mensagem...")
+                editMessage?.clearFocus()
+                editMessage?.setText("")
+                editMessage?.hint = getString(R.string.carregando_mensagem)
+                editMessage?.isEnabled = false
+                btnSend?.isEnabled = false
+                cvLoading?.visibility = View.VISIBLE
+
                 Objects.requireNonNull(with(chatView) { this?.adapter })
                     .notifyDataSetChanged()
                 Objects.requireNonNull(with(chatView) { this?.layoutManager })
@@ -301,32 +297,47 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun reportMessageDialog() {
-        showDialogReportChat(context = this, onSuccess = {reportMessageSendToFirebase()})
+    private fun checkForAppUpdate() {
+        // Returns an intent object that you use to check for an update.
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+        Log.d("AppUpdateManager", "Checking for app updates.")
+        // Checks that the platform will allow the specified type of update.
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            Log.d("AppUpdateManager", "Update availability: ${appUpdateInfo.updateAvailability()}")
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                // Request the update.
+                try {
+                    val installType = when {
+                        appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE) -> AppUpdateType.FLEXIBLE
+                        appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE) -> AppUpdateType.IMMEDIATE
+                        else -> null
+                    }
+                    if (installType == AppUpdateType.FLEXIBLE) appUpdateManager.registerListener(
+                        appUpdatedListener
+                    )
+                    appUpdateManager.startUpdateFlowForResult(
+                        appUpdateInfo,
+                        installType!!,
+                        this,
+                        APP_UPDATE_REQUEST_CODE
+                    )
+                } catch (e: IntentSender.SendIntentException) {
+                    e.printStackTrace()
+                }
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("AppUpdateManager", "Failed to check for updates", exception)
+        }
     }
 
-    private fun reportMessageSendToFirebase() {
-        val conversation = Conversation(userName.toString() , messageList, userId.toString())
-        showDialogConfirmReportChat(context = this, onSuccess = {
-            conversationManager.saveReportConversation(conversation)
-        })
-
-    }
-
-    fun addInitialMessage() {
-        Objects.requireNonNull(with(chatView) { this?.layoutManager })
-            ?.scrollToPosition(messageList.size - 1)
-        messageList.add(
-            Message(
-                "A seguir, você terá uma conversa com uma amiga virtual, chamada Samay. " +
-                        "A assistente é útil, criativa, inteligente e muito amigável. " +
-                        "Divirta-se usando a Samay!",
-                true
-            )
-        )
-        chatAdapter!!.notifyDataSetChanged()
-        Objects.requireNonNull(with(chatView) { this?.layoutManager })
-            ?.scrollToPosition(messageList.size - 1)
+    private fun popupSnackbarForCompleteUpdate() {
+        val snackbar = Snackbar.make(
+            findViewById(R.id.drawer_layout),
+            "An update has just been downloaded.",
+            Snackbar.LENGTH_INDEFINITE)
+        snackbar.setAction("RESTART") { appUpdateManager.completeUpdate() }
+        snackbar.setActionTextColor(ContextCompat.getColor(this, R.color.backgroundColor))
+        snackbar.show()
     }
 
     private fun observeFontSize() {
@@ -341,6 +352,15 @@ class MainActivity : BaseActivity() {
     private fun addAndSpeakInitialMessage() {
         Objects.requireNonNull(with(chatView) { this?.layoutManager })
             ?.scrollToPosition(messageList.size - 1)
+        val data = Date()
+        val dataBr = java.text.SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(data)
+        messageList.add(
+            Message(
+                dataBr,
+                true
+                , data = dataBr
+            )
+        )
         messageList.add(
             Message(
                 "A seguir, você terá uma conversa com uma amiga virtual, chamada Samay. " +
@@ -376,16 +396,6 @@ class MainActivity : BaseActivity() {
             }
         }
 
-        // Observe credits changes
-        //firestoreRepo.startListeningForCreditUpdates()
-        lifecycleScope.launch {
-            walletRepo.getCredits().flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
-                .collect { credits ->
-                    with(creditsTextView) { this?.text = credits.toString() }
-                    Log.i("credits (load data store)", credits.toString())
-                }
-        }
-
         // Observe subscription status changes
         firestoreRepo.subscriptionStatus.asLiveData().distinctUntilChanged().observe(this)
         { subscription ->
@@ -395,13 +405,12 @@ class MainActivity : BaseActivity() {
         // Observe the changes in fontSize
         firestoreRepo._fontSize.asLiveData().observe(this)
         { chatAdapter?.updateFontSize(it) }
-
         lifecycleScope.launch {
             firestoreRepo.fetchData()
         }
     }
 
-    fun speakText(text: String) {
+    private fun speakText(text: String) {
         firestoreRepo.textToSpeech.asLiveData().observe(this) { textToSpeechEnabled ->
             if (textToSpeechInitialized && textToSpeechEnabled) {
                 textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null, "tts_id")
@@ -417,60 +426,14 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun checkSubscriptionAndCreditsAndStartMessageLoop(message: String) {
-        CoroutineScope(Dispatchers.Main).launch {
-            if (subscriptionTextView?.text == "GPT4") {
-                Log.i("start message Premium/GPT4", message)
-                gptMessage(message)
-                //firestoreRepo.onUserActivity(applicationContext)
-            } else {
-                firestoreRepo.credits.first().let {
-                    val currentCredits = creditsTextView?.text.toString().toLong()
-                    if (currentCredits > 0) {
-                        walletRepo.setCredits(currentCredits.toInt() - 1)
-                        val updatedCredits = walletRepo.getCredits()
-
-                        lifecycleScope.launch {
-                            updatedCredits.collect { credits ->
-                                creditsTextView?.text = credits.toString()
-                            }
-                        }
-                        // send the message
-                        Log.i("start message minus", message)
-                        gptMessage(message)
-                        //firestoreRepo.onUserActivity(applicationContext)
-                    } else {
-                        runOnUiThread {
-                            dismissProgressDialog()
-                            CoroutineScope(Dispatchers.Main).launch {
-                                walletRepo.setCreditsToZero()
-                                showNoCreditsAlertDialog(this@MainActivity) {
-                                    /* Here you can specify the action you want to
-                                     perform when pressing the "Buy credits" button, for example: */
-                                    displayBuyCreditsBuyout()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun displayBuyCreditsBuyout() {
-        val intent = Intent(this, Wallet::class.java).apply {
-            putExtra("SHOW_BUY_CREDITS", true)
-        }
-        startActivity(intent)
-    }
-
-
     private fun handleTimeoutError(elapsedTime: Long, timeout: Int): Boolean {
         if (elapsedTime > timeout * 1000) {
             runOnUiThread {
-                dismissProgressDialog()
+                cvLoading?.visibility = View.INVISIBLE
+                editMessage?.setText("")
+                editMessage?.isEnabled = true
+                btnSend?.isEnabled = true
                 CoroutineScope(Dispatchers.Main).launch {
-                    walletRepo.addCredits(1)
                     // Show timeout error to the client
                     Toast.makeText(
                         this@MainActivity, "Erro: " +
@@ -493,12 +456,13 @@ class MainActivity : BaseActivity() {
                 Log.i("\nUser Input:", clientMessage)
                 val message = ChatMessage("user", clientMessage)
                 //TODO atualizar modelos frequentemente
-                val model: String = if (subscriptionTextView?.text == "GPT4") {
-                    "gpt-4-1106-preview"
-                } else {
-                    "gpt-3.5-turbo-1106"
+                val model: String = when (subscriptionTextView?.text.toString()) {
+                    "BASICO" -> "gpt-3.5-turbo-16k"
+                    "MEDIO" -> "gpt-4"
+                    "AVANCADO" -> "gpt-4-1106-preview"
+                    "PREMIUM" -> "gpt-4-0125-preview"
+                    else -> "gpt-3.5-turbo"
                 }
-                // Add the initial assistant message with the prompt
                 val initialPrompt = "Você é uma amiga virtual chamada Samay. " +
                         "Você é útil, criativa, inteligente, curiosa, amorosa, e muito amigável. " +
                         "Você gosta muito de saber mais sobre o humano com quem está conversando " +
@@ -552,10 +516,10 @@ class MainActivity : BaseActivity() {
                         crashlytics.recordException(e)
                         e.printStackTrace()
                         runOnUiThread {
-                            dismissProgressDialog()
-                            CoroutineScope(Dispatchers.Main).launch {
-                                walletRepo.addCredits(1)
-                            }
+                            cvLoading?.visibility = View.INVISIBLE
+                            editMessage?.setText("")
+                            editMessage?.isEnabled = true
+                            btnSend?.isEnabled = true
                             Toast.makeText(
                                 this@MainActivity,
                                 "Erro de Servidor: ${e.message}. Favor tente mais tarde.",
@@ -568,7 +532,7 @@ class MainActivity : BaseActivity() {
 
                 msgs.add(message)
                 val userMessage = Message(clientMessage, false)
-                messageList.add(userMessage) // Add user message to messageList
+                messageList.add(userMessage)
 
                 val chatCompletionRequest = ChatCompletionRequest.builder()
                     .model(model)
@@ -603,7 +567,10 @@ class MainActivity : BaseActivity() {
 
                     if (choices.isNotEmpty()) {
                         runOnUiThread {
-                            dismissProgressDialog()
+                            cvLoading?.visibility = View.INVISIBLE
+                            editMessage?.setText("")
+                            editMessage?.isEnabled = true
+                            btnSend?.isEnabled = true
                             val assistantMessage =
                                 Message(choices[0].content.toString().trim(), true)
                             messageList.add(assistantMessage) // Add assistant message to messageList
@@ -644,9 +611,11 @@ class MainActivity : BaseActivity() {
                     crashlytics.recordException(e)
                     e.printStackTrace()
                     runOnUiThread {
-                        dismissProgressDialog()
+                        cvLoading?.visibility = View.INVISIBLE
+                        editMessage?.setText("")
+                        editMessage?.isEnabled = true
+                        btnSend?.isEnabled = true
                         CoroutineScope(Dispatchers.Main).launch {
-                            walletRepo.addCredits(1)
                             Toast.makeText(
                                 this@MainActivity, "Erro: " +
                                         "O servidor demorou demais para responder",
@@ -660,9 +629,11 @@ class MainActivity : BaseActivity() {
                 crashlytics.recordException(e)
                 e.printStackTrace()
                 runOnUiThread {
-                    dismissProgressDialog()
+                    cvLoading?.visibility = View.INVISIBLE
+                    editMessage?.setText("")
+                    editMessage?.isEnabled = true
+                    btnSend?.isEnabled = true
                     CoroutineScope(Dispatchers.Main).launch {
-                        walletRepo.addCredits(1)
                         Toast.makeText(
                             this@MainActivity,
                             "Erro: ${e.message}", Toast.LENGTH_SHORT
@@ -674,7 +645,7 @@ class MainActivity : BaseActivity() {
         thread.start()
     }
 
-    fun onConversationDataLoaded() {
+    private fun onConversationDataLoaded() {
         chatAdapter?.notifyDataSetChanged()
         chatView?.layoutManager?.scrollToPosition(messageList.size - 1)
     }
@@ -746,6 +717,47 @@ class MainActivity : BaseActivity() {
                 editMessage?.setText(Objects.requireNonNull(res)[0])
             }
         }
+        if (requestCode == APP_UPDATE_REQUEST_CODE) {
+            if (resultCode != Activity.RESULT_OK) {
+                Toast.makeText(this,
+                    "Erro na atualização:tente de novo na próxima vez que abrir o app",
+                    Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        onConversationDataLoaded()
+        Log.i("onResume", firestoreRepo._fontSize.value.toString())
+        chatAdapter?.notifyDataSetChanged()
+
+        appUpdateManager
+            .appUpdateInfo
+            .addOnSuccessListener { appUpdateInfo ->
+
+                // If the update is downloaded but not installed,
+                // notify the user to complete the update.
+                if (appUpdateInfo.installStatus() == InstallStatus.DOWNLOADED) {
+                    popupSnackbarForCompleteUpdate()
+                }
+
+                //Check if Immediate update is required
+                try {
+                    if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                        // If an in-app update is already running, resume the update.
+                        appUpdateManager.startUpdateFlowForResult(
+                            appUpdateInfo,
+                            AppUpdateType.IMMEDIATE,
+                            this,
+                            APP_UPDATE_REQUEST_CODE
+                        )
+                    }
+                } catch (e: IntentSender.SendIntentException) {
+                    e.printStackTrace()
+                }
+            }
     }
 
     override fun onDestroy() {

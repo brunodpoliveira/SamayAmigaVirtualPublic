@@ -1,159 +1,1151 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context=".ui.main.MainActivity">
+    android:id="@+id/scrollView"
+    android:background="@color/backgroundPrimaryConfig"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/imageView15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:scaleType="centerCrop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/bg_wallet" />
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView9"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/publicasans_medium"
+        android:text="@string/planos"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/toolbar" />
 
-        <TextView
-            android:id="@+id/creditsHead"
+        <ImageButton
+            android:id="@+id/imgBtn_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/credits"
+            android:layout_marginStart="22dp"
+            android:background="@android:color/transparent"
+            android:backgroundTint="@color/text_color"
+            android:contentDescription="Botão de voltar"
+            android:padding="10dp"
+            android:src="@drawable/seta"
+            app:layout_constraintBottom_toBottomOf="@+id/toolbar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
 
-        <TextView
-            android:id="@+id/creditsCount"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cta_seja_premium"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/textview"
-            app:layout_constraintStart_toEndOf="@+id/creditsHead"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/subscriptionHead"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="200dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/subscription"
+            android:layout_marginTop="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/imageView15">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/cv_btn_seja_premium"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="22dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="22dp"
+                android:background="@drawable/bg_corner"
+                android:elevation="12dp"
+                app:cardCornerRadius="80dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/imageView15">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/tv_btn_seja_premium"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/publicasans_medium"
+                        android:text="@string/seja_premium"
+                        android:textAlignment="center"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/textView10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/publicasans_medium"
+                android:text="Por que ser premium?"
+                android:textColor="@color/text_color"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@+id/cv_btn_seja_premium"
+                app:layout_constraintTop_toBottomOf="@+id/cv_btn_seja_premium" />
+
+            <View
+                android:id="@+id/divider8"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="?android:attr/listDivider"
+                app:layout_constraintEnd_toEndOf="@+id/cv_btn_seja_premium"
+                app:layout_constraintStart_toStartOf="@+id/textView10"
+                app:layout_constraintTop_toBottomOf="@+id/textView10" />
+
+            <ImageView
+                android:id="@+id/imgReason1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/tvReason1"
+                app:layout_constraintStart_toStartOf="@+id/divider8"
+                app:layout_constraintTop_toTopOf="@+id/tvReason1"
+                app:srcCompat="@drawable/check_" />
+
+            <TextView
+                android:id="@+id/tvReason1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/publicasans_light"
+                android:text="Você não precisa de uma assinatura para usar o app! Mas assinando Premium, você terá diálogos ilimitados e conversas avançadas com a Samay, com mais de 250 páginas (128k tokens) de memória!"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/divider8"
+                app:layout_constraintStart_toEndOf="@+id/imgReason1"
+                app:layout_constraintTop_toBottomOf="@+id/divider8" />
+
+            <ImageView
+                android:id="@+id/imgReason2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/tvReason2"
+                app:layout_constraintStart_toStartOf="@+id/divider8"
+                app:layout_constraintTop_toTopOf="@+id/tvReason2"
+                app:srcCompat="@drawable/check_" />
+
+            <TextView
+                android:id="@+id/tvReason2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/publicasans_light"
+                android:text="Acesso ao algoritmo de conversa mais avançado do mundo (GPT-4) para uma experiência incomparável."
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/divider8"
+                app:layout_constraintStart_toEndOf="@+id/imgReason2"
+                app:layout_constraintTop_toBottomOf="@+id/tvReason1" />
+
+            <ImageView
+                android:id="@+id/imgReason3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/tvReason3"
+                app:layout_constraintStart_toStartOf="@+id/divider8"
+                app:layout_constraintTop_toTopOf="@+id/tvReason3"
+                app:srcCompat="@drawable/check_" />
+
+            <TextView
+                android:id="@+id/tvReason3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/publicasans_light"
+                android:text="Suporte emocional de detalhamento máximo."
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/divider8"
+                app:layout_constraintStart_toEndOf="@+id/imgReason3"
+                app:layout_constraintTop_toBottomOf="@+id/tvReason2" />
+
+            <ImageView
+                android:id="@+id/imgReason4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@+id/tvReason4"
+                app:layout_constraintStart_toStartOf="@+id/divider8"
+                app:layout_constraintTop_toTopOf="@+id/tvReason4"
+                app:srcCompat="@drawable/check_" />
+
+            <TextView
+                android:id="@+id/tvReason4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/publicasans_light"
+                android:text="Conversas infinitamente ricas, já que o algoritmo tem memória de 256 páginas de texto"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="@+id/divider8"
+                app:layout_constraintStart_toEndOf="@+id/imgReason4"
+                app:layout_constraintTop_toBottomOf="@+id/tvReason3" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
-            android:id="@+id/subscriptionStatus"
+            android:id="@+id/textView8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/subscriptionStatusText"
-            app:layout_constraintStart_toEndOf="@+id/subscriptionHead"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/publicasans_medium"
+            android:text="Escolha seu plano de assinatura"
+            android:textColor="@color/text_color"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/imgBtn_back"
+            app:layout_constraintTop_toBottomOf="@+id/cta_seja_premium" />
 
-        <Button
-            android:id="@+id/itemCancel"
-            android:layout_width="229dp"
-            android:layout_height="61dp"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewDiamante"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView8">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imageView7"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="24dp"
+                    android:src="@drawable/gpt"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvDiamante"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="(Mensal) Premium: Confidência e Inovação (GPT4 Turbo)\ngrátis por 7 dias"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/text_color"
+                    android:textSize="18sp"
+                    app:layout_constraintEnd_toStartOf="@+id/textView20"
+                    app:layout_constraintStart_toEndOf="@+id/imageView7"
+                    app:layout_constraintTop_toTopOf="@+id/imageView7" />
+
+                <ImageView
+                    android:id="@+id/imgDiamante1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintStart_toStartOf="@+id/imageView7"
+                    app:layout_constraintTop_toBottomOf="@+id/tvDiamante"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvDiamante1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Conversa infinitamente rica (128k tokens)"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/imgDiamante1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgDiamante1"
+                    app:layout_constraintTop_toTopOf="@+id/imgDiamante1" />
+
+                <ImageView
+                    android:id="@+id/imgDiamante2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvDiamante2"
+                    app:layout_constraintStart_toStartOf="@+id/imageView7"
+                    app:layout_constraintTop_toTopOf="@+id/tvDiamante2"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvDiamante2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Acesso a tecnologia de ponta para uma experiência incomparável"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgDiamante2"
+                    app:layout_constraintTop_toBottomOf="@+id/divider5" />
+
+                <ImageView
+                    android:id="@+id/imgDiamante3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvDiamante3"
+                    app:layout_constraintStart_toStartOf="@+id/imageView7"
+                    app:layout_constraintTop_toTopOf="@+id/tvDiamante3"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvDiamante3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Suporte emocional de detalhamento máximo"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgDiamante3"
+                    app:layout_constraintTop_toBottomOf="@+id/divider6" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cv_btn_shop_diamante"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/bg_corner"
+                    android:elevation="6dp"
+                    app:cardCornerRadius="80dp"
+                    app:layout_constraintEnd_toEndOf="@+id/tvDiamante3"
+                    app:layout_constraintStart_toStartOf="@+id/imgDiamante3"
+                    app:layout_constraintTop_toBottomOf="@+id/tvDiamante3">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/tv_btn_shop"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/publicasans_medium"
+                            android:text="Experimente grátis* e assine esse plano mensal"
+                            android:textAlignment="center"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/textView20"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="R$ 29,99"
+                    android:textColor="@color/text_color"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tvDiamante" />
+
+                <TextView
+                    android:id="@+id/textView21"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/publicasans_light"
+                    android:text="POR MÊS"
+                    android:textColor="@color/text_color"
+                    android:textSize="10sp"
+                    app:layout_constraintEnd_toEndOf="@+id/textView20"
+                    app:layout_constraintTop_toBottomOf="@+id/textView20" />
+
+                <View
+                    android:id="@+id/divider5"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvDiamante1"
+                    app:layout_constraintStart_toStartOf="@+id/imgDiamante1"
+                    app:layout_constraintTop_toBottomOf="@+id/tvDiamante1" />
+
+                <View
+                    android:id="@+id/divider6"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvDiamante2"
+                    app:layout_constraintStart_toStartOf="@+id/imgDiamante2"
+                    app:layout_constraintTop_toBottomOf="@+id/tvDiamante2" />
+
+                <TextView
+                    android:id="@+id/textView11"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="24dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="*: Grátis por 7 dias e depois R$ 29,99/mês.\n Renovado automaticamente. Cancele quando quiser"
+                    android:textAlignment="center"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/cv_btn_shop_diamante"
+                    app:layout_constraintStart_toStartOf="@+id/cv_btn_shop_diamante"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_gerenciar_assinatura_diamante" />
+
+                <TextView
+                    android:id="@+id/tv_gerenciar_assinatura_diamante"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:padding="8sp"
+                    android:text="@string/gerenciar_assinatura"
+                    android:textAlignment="center"
+                    android:textColor="@color/blue_link"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="@+id/cv_btn_shop_diamante"
+                    app:layout_constraintStart_toStartOf="@+id/cv_btn_shop_diamante"
+                    app:layout_constraintTop_toBottomOf="@+id/cv_btn_shop_diamante" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewOuro"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardViewDiamante">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imageView8"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="24dp"
+                    android:src="@drawable/gpt"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvOuro"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="(Mensal) Avançado: Confidente Atencioso (GPT-4 1106)"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/text_color"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toStartOf="@+id/tvValorOuro"
+                    app:layout_constraintStart_toEndOf="@+id/imageView8"
+                    app:layout_constraintTop_toTopOf="@+id/imageView8" />
+
+                <ImageView
+                    android:id="@+id/imgOuro1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvOuro1"
+                    app:layout_constraintStart_toStartOf="@+id/imageView8"
+                    app:layout_constraintTop_toTopOf="@+id/tvOuro1"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvOuro1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Mesma capacidade do Plano Médio mas melhoras em seguir instruções"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgOuro1"
+                    app:layout_constraintTop_toBottomOf="@+id/textView23" />
+
+                <ImageView
+                    android:id="@+id/imgOuro2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvOuro2"
+                    app:layout_constraintStart_toStartOf="@+id/imageView8"
+                    app:layout_constraintTop_toTopOf="@+id/tvOuro2"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvOuro2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Orientações com riqueza de detalhes"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgOuro2"
+                    app:layout_constraintTop_toBottomOf="@+id/divider7" />
+
+                <ImageView
+                    android:id="@+id/imgOuro3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvOuro3"
+                    app:layout_constraintStart_toStartOf="@+id/imageView8"
+                    app:layout_constraintTop_toTopOf="@+id/tvOuro3"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvOuro3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Capacidade para longas conversas"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgOuro3"
+                    app:layout_constraintTop_toBottomOf="@+id/divider9" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cv_btn_shop_ouro"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="22dp"
+                    android:layout_marginBottom="24dp"
+                    android:background="@drawable/bg_corner"
+                    android:elevation="6dp"
+                    app:cardCornerRadius="80dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/tvOuro3"
+                    app:layout_constraintStart_toStartOf="@+id/imgOuro3"
+                    app:layout_constraintTop_toBottomOf="@+id/tvOuro3">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/tv_btn_shop_ouro"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/publicasans_medium"
+                            android:text="Assinar plano(Plano Mensal,renovado automaticamente.Cobrança imediata após fazer assinatura.Cancele quando quiser)"
+                            android:textAlignment="center"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/tvValorOuro"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="R$ 14,99"
+                    android:textColor="@color/text_color"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tvOuro" />
+
+                <TextView
+                    android:id="@+id/textView23"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/publicasans_light"
+                    android:text="POR MÊS"
+                    android:textColor="@color/text_color"
+                    android:textSize="10sp"
+                    app:layout_constraintEnd_toEndOf="@+id/tvValorOuro"
+                    app:layout_constraintTop_toBottomOf="@+id/tvValorOuro" />
+
+                <View
+                    android:id="@+id/divider7"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvOuro1"
+                    app:layout_constraintStart_toStartOf="@+id/imgOuro1"
+                    app:layout_constraintTop_toBottomOf="@+id/tvOuro1" />
+
+                <View
+                    android:id="@+id/divider9"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvOuro2"
+                    app:layout_constraintStart_toStartOf="@+id/imgOuro2"
+                    app:layout_constraintTop_toBottomOf="@+id/tvOuro2" />
+
+                <TextView
+                    android:id="@+id/tvGerenciarAssinaturaOuro"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:padding="8sp"
+                    android:text="@string/gerenciar_assinatura"
+                    android:textAlignment="center"
+                    android:textColor="@color/blue_link"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="@+id/cv_btn_shop_ouro"
+                    app:layout_constraintStart_toStartOf="@+id/cv_btn_shop_ouro"
+                    app:layout_constraintTop_toBottomOf="@+id/cv_btn_shop_ouro" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewPrata"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardViewOuro">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imageView11"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="24dp"
+                    android:src="@drawable/gpt"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvPrata"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="(Mensal) Médio: Diálogo Profundo (GPT-4)"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/text_color"
+                    android:textSize="18sp"
+                    app:layout_constraintEnd_toStartOf="@+id/tvValorPrata"
+                    app:layout_constraintStart_toEndOf="@+id/imageView11"
+                    app:layout_constraintTop_toTopOf="@+id/imageView11" />
+
+                <ImageView
+                    android:id="@+id/imgPrata1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvPrata1"
+                    app:layout_constraintStart_toStartOf="@+id/imageView11"
+                    app:layout_constraintTop_toTopOf="@+id/tvPrata1"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvPrata1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Memória de 16 páginas (8k tokens)"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgPrata1"
+                    app:layout_constraintTop_toBottomOf="@+id/textView26" />
+
+                <ImageView
+                    android:id="@+id/imgPrata2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvPrata2"
+                    app:layout_constraintStart_toStartOf="@+id/imageView11"
+                    app:layout_constraintTop_toTopOf="@+id/tvPrata2"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvPrata2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Mais detalhes e profundidade na resposta"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgPrata2"
+                    app:layout_constraintTop_toBottomOf="@+id/divider10" />
+
+                <ImageView
+                    android:id="@+id/imgPrata3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvPrata3"
+                    app:layout_constraintStart_toStartOf="@+id/imageView11"
+                    app:layout_constraintTop_toTopOf="@+id/tvPrata3"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvPrata3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Ideal para debates, discussões profundas"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgPrata3"
+                    app:layout_constraintTop_toBottomOf="@+id/divider12" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cv_btn_shop_prata"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="22dp"
+                    android:layout_marginBottom="24dp"
+                    android:background="@drawable/bg_corner"
+                    android:elevation="6dp"
+                    app:cardCornerRadius="80dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/tvPrata3"
+                    app:layout_constraintStart_toStartOf="@+id/imgPrata3"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPrata3">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/tv_btn_shop_prata"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/publicasans_medium"
+                            android:text="Assinar plano(Plano Mensal,renovado automaticamente.Cobrança imediata após fazer assinatura.Cancele quando quiser)"
+                            android:textAlignment="center"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/tvValorPrata"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="R$ 9,99"
+                    android:textColor="@color/text_color"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tvPrata" />
+
+                <TextView
+                    android:id="@+id/textView26"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/publicasans_light"
+                    android:text="POR MÊS"
+                    android:textColor="@color/text_color"
+                    android:textSize="10sp"
+                    app:layout_constraintEnd_toEndOf="@+id/tvValorPrata"
+                    app:layout_constraintTop_toBottomOf="@+id/tvValorPrata" />
+
+                <View
+                    android:id="@+id/divider10"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvPrata1"
+                    app:layout_constraintStart_toStartOf="@+id/imgPrata1"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPrata1" />
+
+                <View
+                    android:id="@+id/divider12"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvPrata2"
+                    app:layout_constraintStart_toStartOf="@+id/imgPrata2"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPrata2" />
+
+                <TextView
+                    android:id="@+id/tvGerenciarAssinaturaPrata"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:padding="8sp"
+                    android:text="@string/gerenciar_assinatura"
+                    android:textAlignment="center"
+                    android:textColor="@color/blue_link"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="@+id/cv_btn_shop_prata"
+                    app:layout_constraintStart_toStartOf="@+id/cv_btn_shop_prata"
+                    app:layout_constraintTop_toBottomOf="@+id/cv_btn_shop_prata" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardViewBronze"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardViewPrata">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imageView14"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="24dp"
+                    android:src="@drawable/gpt"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tvBronze"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="(Mensal) Básico: Interação Rápida (GPT-3.5 Turbo)"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/text_color"
+                    android:textSize="18sp"
+                    app:layout_constraintEnd_toStartOf="@+id/tvValorBronze"
+                    app:layout_constraintStart_toEndOf="@+id/imageView14"
+                    app:layout_constraintTop_toTopOf="@+id/imageView14" />
+
+                <ImageView
+                    android:id="@+id/imgBronze1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvBronze1"
+                    app:layout_constraintStart_toStartOf="@+id/imageView14"
+                    app:layout_constraintTop_toTopOf="@+id/tvBronze1"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvBronze1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Memória de 32 páginas (16k tokens)"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgBronze1"
+                    app:layout_constraintTop_toBottomOf="@+id/textView29" />
+
+                <ImageView
+                    android:id="@+id/imgBronze2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvBronze2"
+                    app:layout_constraintStart_toStartOf="@+id/imageView14"
+                    app:layout_constraintTop_toTopOf="@+id/tvBronze2"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvBronze2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Ideal para consultas e suporte básico"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgBronze2"
+                    app:layout_constraintTop_toBottomOf="@+id/divider13" />
+
+                <ImageView
+                    android:id="@+id/imgBronze3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/infinity"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvBronze3"
+                    app:layout_constraintStart_toStartOf="@+id/imageView14"
+                    app:layout_constraintTop_toTopOf="@+id/tvBronze3"
+                    app:tint="@color/signature_promotion" />
+
+                <TextView
+                    android:id="@+id/tvBronze3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="Respostas rápidas e concisas"
+                    android:textColor="@color/signature_promotion"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/imgBronze3"
+                    app:layout_constraintTop_toBottomOf="@+id/divider15" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/cv_btn_shop_bronze"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="22dp"
+                    android:layout_marginBottom="24dp"
+                    android:background="@drawable/bg_corner"
+                    android:elevation="6dp"
+                    app:cardCornerRadius="80dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/tvBronze3"
+                    app:layout_constraintStart_toStartOf="@+id/imgBronze3"
+                    app:layout_constraintTop_toBottomOf="@+id/tvBronze3">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/tv_btn_shop_bronze"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/publicasans_medium"
+                            android:text="Assinar plano(Plano Mensal,renovado automaticamente.Cobrança imediata após fazer assinatura.Cancele quando quiser)"
+                            android:textAlignment="center"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/tvValorBronze"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:text="R$ 4,99"
+                    android:textColor="@color/text_color"
+                    android:textSize="20sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/tvBronze" />
+
+                <TextView
+                    android:id="@+id/textView29"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/publicasans_light"
+                    android:text="POR MÊS"
+                    android:textColor="@color/text_color"
+                    android:textSize="10sp"
+                    app:layout_constraintEnd_toEndOf="@+id/tvValorBronze"
+                    app:layout_constraintTop_toBottomOf="@+id/tvValorBronze" />
+
+                <View
+                    android:id="@+id/divider13"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvBronze1"
+                    app:layout_constraintStart_toStartOf="@+id/imgBronze1"
+                    app:layout_constraintTop_toBottomOf="@+id/tvBronze1" />
+
+                <View
+                    android:id="@+id/divider15"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?android:attr/listDivider"
+                    app:layout_constraintEnd_toEndOf="@+id/tvBronze2"
+                    app:layout_constraintStart_toStartOf="@+id/imgBronze2"
+                    app:layout_constraintTop_toBottomOf="@+id/tvBronze2" />
+
+                <TextView
+                    android:id="@+id/tvGerenciarAssinaturaBronze"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="@font/publicasans_medium"
+                    android:padding="8sp"
+                    android:text="@string/gerenciar_assinatura"
+                    android:textAlignment="center"
+                    android:textColor="@color/blue_link"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="@+id/cv_btn_shop_bronze"
+                    app:layout_constraintStart_toStartOf="@+id/cv_btn_shop_bronze"
+                    app:layout_constraintTop_toBottomOf="@+id/cv_btn_shop_bronze" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/textView15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="44dp"
-            android:text="@string/checkAndCancelOffering"
-            android:textColor="#757575"
-            app:layout_constraintStart_toEndOf="@+id/creditsCount"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/goBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="50dp"
-            android:text="@string/goToProfileActivity"
-            android:textColor="#757575"
-            app:layout_constraintEnd_toStartOf="@+id/itemCancel"
-            app:layout_constraintTop_toBottomOf="@+id/creditsHead" />
+            android:layout_marginEnd="32dp"
+            android:fontFamily="@font/publicasans_medium"
+            android:text="@string/cta_experimente"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toTopOf="@+id/textView16"
+            app:layout_constraintEnd_toEndOf="@+id/imageView15"
+            app:layout_constraintStart_toStartOf="@+id/imageView15" />
 
         <TextView
-            android:id="@+id/itemDescriptionGPT4Offering"
-            android:layout_width="199dp"
-            android:layout_height="102dp"
-            android:layout_marginStart="100dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="100dp"
-            android:layout_marginBottom="15dp"
-            android:text="@string/textview"
-            app:layout_constraintBottom_toTopOf="@+id/itemPriceGPT4Offering"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemNameGPT4Offering" />
-
-        <TextView
-            android:id="@+id/itemNameGPT4Offering"
+            android:id="@+id/textView16"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="175dp"
-            android:layout_marginTop="75dp"
-            android:layout_marginEnd="175dp"
-            android:layout_marginBottom="5dp"
-            android:text="@string/textview"
-            app:layout_constraintBottom_toTopOf="@+id/itemDescriptionGPT4Offering"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemPrice" />
-
-        <Button
-            android:id="@+id/itemPriceGPT4Offering"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="150dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="150dp"
-            android:text="@string/button"
-            android:textColor="#757575"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemDescriptionGPT4Offering" />
-
-        <TextView
-            android:id="@+id/itemDescription"
-            android:layout_width="199dp"
-            android:layout_height="102dp"
-            android:layout_marginStart="100dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="100dp"
-            android:layout_marginBottom="15dp"
-            android:text="@string/textview"
-            app:layout_constraintBottom_toTopOf="@+id/itemPrice"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemName" />
-
-        <TextView
-            android:id="@+id/itemName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="175dp"
-            android:layout_marginTop="75dp"
-            android:layout_marginEnd="175dp"
-            android:layout_marginBottom="5dp"
-            android:text="@string/textview"
-            app:layout_constraintBottom_toTopOf="@+id/itemDescription"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemCancel" />
-
-        <Button
-            android:id="@+id/itemPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="150dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="150dp"
-            android:text="@string/button"
-            android:textColor="#757575"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/itemDescription" />
+            android:layout_marginBottom="24dp"
+            android:fontFamily="@font/publicasans_medium"
+            android:text="@string/cta_experimente_days"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="@+id/imageView15"
+            app:layout_constraintStart_toStartOf="@+id/textView15" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
+    </LinearLayout>
 </ScrollView>

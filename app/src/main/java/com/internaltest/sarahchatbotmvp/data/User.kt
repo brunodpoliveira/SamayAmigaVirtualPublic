@@ -12,9 +12,6 @@ data class User(
     @ColumnInfo(name = "subscription_status")
     var subscriptionStatus: String,
 
-    @ColumnInfo(name = "credits")
-    var credits: Int,
-
     @ColumnInfo(name = "total_messages_sent")
     var totalMsgs: Int,
 
@@ -31,6 +28,6 @@ data class User(
     var fontSize: Int,
 ){
     override fun toString(): String {
-        return "User(firebaseId=$firebaseId, subscriptionStatus=$subscriptionStatus, credits=$credits, totalMsgs=$totalMsgs, darkMode=$darkMode, textToSpeech=$textToSpeech, dailyLoginDay=$dailyLoginDay, fontSize=$fontSize)"
+        return "User(firebaseId=$firebaseId, subscriptionStatus=$subscriptionStatus, totalMsgs=$totalMsgs, darkMode=$darkMode, textToSpeech=$textToSpeech, dailyLoginDay=$dailyLoginDay, fontSize=$fontSize)"
     }
 }

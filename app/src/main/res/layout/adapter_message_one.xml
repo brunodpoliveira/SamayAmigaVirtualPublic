@@ -15,7 +15,7 @@
       android:background="@color/bg_chat_send"
       android:minHeight="50dp"
       android:padding="5dp"
-      android:textColor="@color/TextMsgColor"
+      android:textColor="@color/text_color"
       android:textSize="20sp" />
 
   <LinearLayout
@@ -35,7 +35,7 @@
         android:background="@color/bg_chat_receive"
         android:minHeight="50dp"
         android:padding="5dp"
-        android:textColor="@color/TextMsgColor"
+        android:textColor="@color/text_color"
         android:textSize="20sp" />
 
     <ImageView

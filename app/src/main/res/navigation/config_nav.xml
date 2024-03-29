@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/config_nav.xml"
+    app:startDestination="@id/configFragment">
+    <fragment
+        android:id="@+id/configFragment"
+        android:name="com.internaltest.sarahchatbotmvp.ui.config.main.ConfigFragment"
+        android:label="fragment_config"
+        tools:layout="@layout/fragment_config" >
+        <action
+            android:id="@+id/action_configFragment_to_signatureFragment"
+            app:destination="@id/signatureFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/signatureFragment"
+        android:name="com.internaltest.sarahchatbotmvp.ui.adapters.signature.SignatureFragment"
+        android:label="fragment_signature"
+        tools:layout="@layout/fragment_signature" />
+</navigation>

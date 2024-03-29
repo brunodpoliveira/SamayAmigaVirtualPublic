@@ -3,9 +3,13 @@
   <color name="backgroundColor">#002639</color>
   <color name="appTintColor">#E8DE96</color>
   <color name="backgroundTintButtonColor">#2F4D83</color>
-  <color name="TextMsgColor">#FFFFFF</color>
-  <color name="bg_chat_send">#9A9361</color>
-  <color name="bg_chat_receive">#FF385249</color>
+  <color name="text_color">#FFFFFF</color>
+  <color name="bg_chat_send">#15141A</color>
+  <color name="bg_chat_receive">#15141A</color>
+
+    <color name="backgroundPrimary">#000000</color>
+
+
 
   <color name="colorBlack">#000000</color>
   <color name="colorWhite">#FFFFFF</color>
@@ -18,4 +22,21 @@
   <color name="black">#FF000000</color>
 
   <color name="white">#FFFFFFFF</color>
+  <color name="dot_color">#E8DE96</color>
+    <color name="green_dark">#385249</color>
+    <color name="backgroundPrimaryConfig">#181818</color>
+    <color name="card_background">#2A2734</color>
+  <color name="thumbSeekbarColor">#2F4D83</color>
+  <color name="progessSeekbarColor">#2F4D83</color>
+  <color name="divider_color">#FFFFFF</color>
+  <color name="moon_icon_color">#2F4D83</color>
+  <color name="moon_light">#635e51</color>
+  <color name="track_dark_mode">#CBD1DD</color>
+  <color name="audio_color">#FFFFFF</color>
+  <color name="icon_audio">#181818</color>
+    <color name="signature_promotion">#7D848C</color>
+  <color name="colorPrimaryBg">#2A2734</color>
+  <color name="colorBgSignatureView">#1D1B25</color>
+    <color name="blue_link">#4285F4</color>
+    <color name="disable_color">#403B4F</color>
 </resources>
